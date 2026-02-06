@@ -79,7 +79,10 @@ export {
   decodeJwtPayload,
   extractAgeThresholds,
   isTestCredential,
+  isTestSecret,
   getEnvironment,
+  stripSecretPrefix,
+  hasSecretPrefix,
 } from "./utils";
 
 // Constants (for advanced use cases)

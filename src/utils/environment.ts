@@ -2,6 +2,16 @@
  * @agekey/sdk - Environment Detection
  *
  * Auto-detect test vs live environment from credentials.
+ *
+ * Key formats:
+ * - Test keys: Always have ak_test_ prefix
+ * - Live keys: May have ak_live_ prefix OR be legacy keys without prefix
+ *
+ * Legacy key formats (all treated as live):
+ * - v2-{uuid} (e.g., v2-ec924bb1-68e9-4ccd-b1ac-e9116ca69ab7)
+ * - devv2-{uuid}
+ * - stagingv2-{uuid}
+ * - prod-{name}
  */
 
 import { AGEKEY_ENDPOINTS, CREDENTIAL_PREFIXES } from "../constants";
@@ -10,6 +20,9 @@ import type { Environment } from "../types";
 /**
  * Detects whether a client ID is for test or live environment.
  *
+ * Test mode is detected ONLY by the ak_test_ prefix.
+ * All other keys (including legacy keys without prefix) are treated as live.
+ *
  * @param clientId - The AgeKey client ID
  * @returns True if test environment
  *
@@ -17,14 +30,21 @@ import type { Environment } from "../types";
  * ```typescript
  * isTestCredential("ak_test_xxxx"); // true
  * isTestCredential("ak_live_xxxx"); // false
+ * isTestCredential("v2-xxxx");      // false (legacy live key)
+ * isTestCredential("devv2-xxxx");   // false (legacy dev key)
  * ```
  */
 export function isTestCredential(clientId: string): boolean {
+  // Only ak_test_ prefix indicates test mode
+  // All other formats (including legacy) are treated as live
   return clientId.startsWith(CREDENTIAL_PREFIXES.testClientId);
 }
 
 /**
  * Detects whether a secret is for test or live environment.
+ *
+ * Test mode is detected by the sk_test_ prefix.
+ * Legacy secrets (without prefix) are treated as live.
  *
  * @param secret - The AgeKey client secret
  * @returns True if test environment
@@ -34,16 +54,63 @@ export function isTestSecret(secret: string): boolean {
 }
 
 /**
+ * Strip sk_test_ or sk_live_ prefix from a secret if present.
+ *
+ * Use this when you need the raw 32-byte hex secret for cryptographic operations.
+ * The prefix is purely for environment identification.
+ *
+ * @param secret - The secret (may or may not have prefix)
+ * @returns The raw secret without prefix
+ *
+ * @example
+ * ```typescript
+ * stripSecretPrefix("sk_test_abc123..."); // "abc123..."
+ * stripSecretPrefix("sk_live_abc123..."); // "abc123..."
+ * stripSecretPrefix("abc123...");         // "abc123..." (legacy, no change)
+ * ```
+ */
+export function stripSecretPrefix(secret: string): string {
+  if (secret.startsWith(CREDENTIAL_PREFIXES.testSecret)) {
+    return secret.slice(CREDENTIAL_PREFIXES.testSecret.length);
+  }
+  if (secret.startsWith(CREDENTIAL_PREFIXES.liveSecret)) {
+    return secret.slice(CREDENTIAL_PREFIXES.liveSecret.length);
+  }
+  return secret;
+}
+
+/**
+ * Check if a secret has a valid prefix (sk_test_ or sk_live_).
+ *
+ * @param secret - The secret to check
+ * @returns True if the secret has a valid prefix
+ */
+export function hasSecretPrefix(secret: string): boolean {
+  return (
+    secret.startsWith(CREDENTIAL_PREFIXES.testSecret) ||
+    secret.startsWith(CREDENTIAL_PREFIXES.liveSecret)
+  );
+}
+
+/**
  * Validates that client ID and secret are from the same environment.
+ *
+ * Handles legacy secrets (without prefix) by skipping validation.
+ * Only validates if the secret has a prefix (sk_test_ or sk_live_).
  *
  * @param clientId - The AgeKey client ID
  * @param clientSecret - The AgeKey client secret
- * @throws Error if environments don't match
+ * @throws Error if environments don't match (when both have prefixes)
  */
 export function validateCredentialEnvironments(
   clientId: string,
   clientSecret: string
 ): void {
+  // Skip validation for legacy secrets (no prefix)
+  if (!hasSecretPrefix(clientSecret)) {
+    return;
+  }
+
   const clientIsTest = isTestCredential(clientId);
   const secretIsTest = isTestSecret(clientSecret);
 

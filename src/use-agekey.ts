@@ -68,27 +68,25 @@ export class UseAgeKeyClient {
     const state = generateState();
     const nonce = generateNonce();
 
-    // Build claims object
+    // Build claims object (flat format per request-claims.schema.json)
     const claims: UseAgeKeyClaims = {
-      id_token: {
-        age_thresholds: {
-          values: options.ageThresholds,
-        },
-      },
+      age_thresholds: options.ageThresholds,
     };
 
     // Add optional allowed_methods
     if (options.allowedMethods && options.allowedMethods.length > 0) {
-      claims.id_token.allowed_methods = {
-        values: options.allowedMethods,
-      };
+      claims.allowed_methods = options.allowedMethods;
     }
 
     // Add optional verified_after
     if (options.verifiedAfter) {
-      claims.id_token.verified_after = {
-        value: options.verifiedAfter.toISOString(),
-      };
+      // Format as ISO date string (YYYY-MM-DD) for the schema
+      claims.verified_after = options.verifiedAfter.toISOString().split("T")[0];
+    }
+
+    // Add optional overrides
+    if (options.overrides && Object.keys(options.overrides).length > 0) {
+      claims.overrides = options.overrides;
     }
 
     // Build URL parameters

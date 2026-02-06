@@ -6,12 +6,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kidentify/opale.git",
+    "url": "https://github.com/CadamTech/agekey-sdk.git",
     "directory": "agekey-sdk"
   },
-  "homepage": "https://docs.agekey.org/sdk",
+  "homepage": "https://docs.agekey.org/",
   "bugs": {
-    "url": "https://github.com/kidentify/opale/issues"
+    "url": "https://github.com/CadamTech/agekey-sdk/issues"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

@@ -75,6 +75,12 @@ export interface UseAgeKeyOptions {
   verifiedAfter?: Date;
 
   /**
+   * Method-specific overrides for age verification.
+   * Allows fine-grained control over individual verification methods.
+   */
+  overrides?: Record<VerificationMethod, MethodOverride>;
+
+  /**
    * Enable upgrade flow: if user doesn't have an AgeKey, prompt to create one.
    */
   enableCreate?: boolean;
@@ -291,21 +297,31 @@ export interface Environment {
 }
 
 /**
- * OIDC claims format for Use AgeKey.
+ * Claims format for Use AgeKey (request-claims schema).
  * @internal
  */
 export interface UseAgeKeyClaims {
-  id_token: {
-    age_thresholds: {
-      values: number[];
-    };
-    allowed_methods?: {
-      values: VerificationMethod[];
-    };
-    verified_after?: {
-      value: string;
-    };
-  };
+  /** Age thresholds to verify against (1-5 values) */
+  age_thresholds: number[];
+  /** Optional list of allowed verification methods */
+  allowed_methods?: VerificationMethod[];
+  /** Optional minimum verification date */
+  verified_after?: string;
+  /** Optional method-specific overrides */
+  overrides?: Record<string, MethodOverride>;
+}
+
+/**
+ * Method-specific override for age verification.
+ * @internal
+ */
+export interface MethodOverride {
+  /** Minimum age threshold for this method */
+  min_age?: number;
+  /** Minimum verification date for this method */
+  verified_after?: string;
+  /** Method-specific attributes */
+  attributes?: Record<string, unknown>;
 }
 
 /**

@@ -17,4 +17,6 @@ export {
   isTestSecret,
   validateCredentialEnvironments,
   getEnvironment,
+  stripSecretPrefix,
+  hasSecretPrefix,
 } from "./environment";
