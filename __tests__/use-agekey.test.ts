@@ -25,7 +25,7 @@ describe("Use AgeKey", () => {
         ageThresholds: [13, 18, 21],
       });
 
-      expect(url).toContain("https://api.test.agekey.org/v1/oidc/use");
+      expect(url).toContain("https://api-test.agekey.org/v1/oidc/use");
       expect(url).toContain("client_id=ak_test_123456");
       expect(url).toContain("redirect_uri=https%3A%2F%2Fexample.com%2Fcallback");
       expect(url).toContain("response_type=id_token");
@@ -33,10 +33,10 @@ describe("Use AgeKey", () => {
       expect(url).toContain(`state=${state}`);
       expect(url).toContain(`nonce=${nonce}`);
 
-      // Claims should contain age thresholds
+      // Claims should contain age thresholds (flat format)
       const urlObj = new URL(url);
       const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
-      expect(claims.id_token.age_thresholds.values).toEqual([13, 18, 21]);
+      expect(claims.age_thresholds).toEqual([13, 18, 21]);
     });
 
     it("generates unique state and nonce", () => {
@@ -57,7 +57,8 @@ describe("Use AgeKey", () => {
 
       const urlObj = new URL(url);
       const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
-      expect(claims.id_token.allowed_methods.values).toEqual([
+      // Flat format: claims.allowed_methods is an array directly
+      expect(claims.allowed_methods).toEqual([
         "id_doc_scan",
         "payment_card_network",
       ]);
@@ -73,9 +74,8 @@ describe("Use AgeKey", () => {
 
       const urlObj = new URL(url);
       const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
-      expect(claims.id_token.verified_after.value).toBe(
-        verifiedAfter.toISOString()
-      );
+      // Flat format: verified_after is a date string (YYYY-MM-DD)
+      expect(claims.verified_after).toBe("2024-01-01");
     });
 
     it("sets upgrade scope when enableCreate is true", () => {
@@ -87,6 +87,24 @@ describe("Use AgeKey", () => {
 
       expect(url).toContain("scope=openid+agekey.upgrade");
       expect(url).toContain("can_create=true");
+    });
+
+    it("includes overrides when specified", () => {
+      const agekey = createClient();
+      const { url } = agekey.useAgeKey.getAuthorizationUrl({
+        ageThresholds: [18],
+        overrides: {
+          facial_age_estimation: {
+            min_age: 21,
+            attributes: { on_device: true },
+          },
+        },
+      });
+
+      const urlObj = new URL(url);
+      const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
+      expect(claims.overrides).toBeDefined();
+      expect(claims.overrides.facial_age_estimation.min_age).toBe(21);
     });
   });
 

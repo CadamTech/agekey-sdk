@@ -83,9 +83,9 @@ describe("AgeKey Client", () => {
         redirectUri: "https://example.com/callback",
       });
 
-      expect(agekey.environment.baseUrl).toBe("https://api.test.agekey.org");
+      expect(agekey.environment.baseUrl).toBe("https://api-test.agekey.org");
       expect(agekey.environment.useEndpoint).toBe(
-        "https://api.test.agekey.org/v1/oidc/use"
+        "https://api-test.agekey.org/v1/oidc/use"
       );
     });
 

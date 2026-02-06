@@ -60,7 +60,7 @@ describe("Create AgeKey", () => {
       // Verify fetch was called correctly
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toBe("https://api.test.agekey.org/v1/oidc/create/par");
+      expect(url).toBe("https://api-test.agekey.org/v1/oidc/create/par");
       expect(options.method).toBe("POST");
       expect(options.headers["Content-Type"]).toBe(
         "application/x-www-form-urlencoded"
@@ -90,7 +90,7 @@ describe("Create AgeKey", () => {
 
       const url = agekey.createAgeKey.getAuthorizationUrl(requestUri);
 
-      expect(url).toContain("https://api.test.agekey.org/v1/oidc/create");
+      expect(url).toContain("https://api-test.agekey.org/v1/oidc/create");
       expect(url).toContain("client_id=ak_test_123456");
       expect(url).toContain("response_type=none");
       expect(url).toContain(
@@ -161,7 +161,7 @@ describe("Create AgeKey", () => {
       );
       expect(result.expiresIn).toBe(90);
       expect(result.authUrl).toContain(
-        "https://api.test.agekey.org/v1/oidc/create"
+        "https://api-test.agekey.org/v1/oidc/create"
       );
       expect(result.authUrl).toContain(
         encodeURIComponent("urn:ietf:params:oauth:request_uri:abc123")
