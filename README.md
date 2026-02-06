@@ -5,7 +5,7 @@ Official AgeKey SDK for age verification integration.
 ## Installation
 
 ```bash
-npm install @agekey/sdk
+npm i @agekey/sdk
 # or
 pnpm add @agekey/sdk
 # or
@@ -116,7 +116,6 @@ const agekey = new AgeKey({
   clientId: string,       // Required: Your App ID (ak_test_xxx or ak_live_xxx)
   clientSecret?: string,  // Optional: Your App Secret (server-side only)
   redirectUri: string,    // Required: Pre-registered callback URL
-  apiBaseUrl?: string,    // Optional: Override API URL
 });
 ```
 
@@ -226,8 +225,8 @@ try {
 
 The SDK automatically detects test vs live environment from your credentials:
 
-- `ak_test_*` / `sk_test_*` → Test environment (`api.test.agekey.org`)
-- `ak_live_*` / `sk_live_*` → Live environment (`api.agekey.org`)
+- `ak_test_*` / `sk_test_*` → Test environment
+- `ak_live_*` / `sk_live_*` → Live environment
 
 ```typescript
 const agekey = new AgeKey({ clientId: 'ak_test_xxx', ... });
