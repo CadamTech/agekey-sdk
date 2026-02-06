@@ -1,0 +1,71 @@
+{
+  "name": "@agekey/sdk",
+  "version": "0.1.0",
+  "description": "Official AgeKey SDK for age verification integration",
+  "author": "AgeKey <support@agekey.org>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kidentify/opale.git",
+    "directory": "agekey-sdk"
+  },
+  "homepage": "https://docs.agekey.org/sdk",
+  "bugs": {
+    "url": "https://github.com/kidentify/opale/issues"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run build && npm run test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^2.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^2.0.0"
+  },
+  "keywords": [
+    "agekey",
+    "age-verification",
+    "oidc",
+    "oauth2",
+    "identity",
+    "age-gate",
+    "compliance",
+    "privacy"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}
