@@ -1,15 +1,15 @@
-# @agekey/sdk
+# @openage-agekey/sdk
 
 Official AgeKey SDK for age verification integration.
 
 ## Installation
 
 ```bash
-npm i @agekey/sdk
+npm i @openage-agekey/sdk
 # or
-pnpm add @agekey/sdk
+pnpm add @openage-agekey/sdk
 # or
-yarn add @agekey/sdk
+yarn add @openage-agekey/sdk
 ```
 
 ## Quick Start
@@ -19,7 +19,7 @@ yarn add @agekey/sdk
 Check if a user meets age requirements.
 
 ```typescript
-import { AgeKey } from '@agekey/sdk';
+import { AgeKey } from '@openage-agekey/sdk';
 
 // Initialize the client
 const agekey = new AgeKey({
@@ -42,7 +42,7 @@ window.location.href = url;
 
 ```typescript
 // 2. Handle callback (on your /callback route)
-import { AgeKey, AccessDeniedError } from '@agekey/sdk';
+import { AgeKey, AccessDeniedError } from '@openage-agekey/sdk';
 
 const agekey = new AgeKey({
   clientId: 'ak_test_xxxx',
@@ -73,7 +73,7 @@ try {
 Store age verification signals for users (server-side only).
 
 ```typescript
-import { AgeKey } from '@agekey/sdk';
+import { AgeKey } from '@openage-agekey/sdk';
 
 // Initialize with client secret (server-side only!)
 const agekey = new AgeKey({
@@ -205,7 +205,7 @@ import {
   UnauthorizedClientError, // Invalid credentials
   ServerError,           // AgeKey server error
   NetworkError,          // Network connectivity issue
-} from '@agekey/sdk';
+} from '@openage-agekey/sdk';
 
 try {
   const result = agekey.useAgeKey.handleCallback(url, { state, nonce });
@@ -274,7 +274,7 @@ import type {
   PARResult,
   VerificationMethod,
   AgeSpec,
-} from '@agekey/sdk';
+} from '@openage-agekey/sdk';
 ```
 
 ## Documentation
