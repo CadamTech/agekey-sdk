@@ -6,7 +6,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/CadamTech/agekey-sdk.git",
+    "url": "git+https://github.com/CadamTech/agekey-sdk.git",
     "directory": "agekey-sdk"
   },
   "homepage": "https://docs.agekey.org/",
