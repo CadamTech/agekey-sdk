@@ -1,5 +1,5 @@
 {
-  "name": "@agekey/sdk",
+  "name": "@openage-agekey/sdk",
   "version": "0.0.1",
   "description": "Official AgeKey SDK for age verification integration",
   "author": "AgeKey <support@agekey.org>",
