@@ -89,6 +89,10 @@ export class UseAgeKeyClient {
       claims.overrides = options.overrides;
     }
 
+    if (options.provenance && (options.provenance.allowed?.length || options.provenance.denied?.length)) {
+      claims.provenance = options.provenance;
+    }
+
     // Build URL parameters
     const params = new URLSearchParams({
       client_id: this.config.clientId,

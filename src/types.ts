@@ -81,6 +81,14 @@ export interface UseAgeKeyOptions {
   overrides?: Record<VerificationMethod, MethodOverride>;
 
   /**
+   * Filter age signals by provenance (origin of verification technology).
+   */
+  provenance?: {
+    allowed?: string[];
+    denied?: string[];
+  };
+
+  /**
    * Enable upgrade flow: if user doesn't have an AgeKey, prompt to create one.
    */
   enableCreate?: boolean;
@@ -90,6 +98,8 @@ export interface UseAgeKeyOptions {
    * Will be returned unchanged in the callback URL.
    */
   customState?: Record<string, unknown>;
+
+
 }
 
 /**
@@ -220,6 +230,12 @@ export interface CreateAgeKeyOptions {
   attributes?: Record<string, unknown>;
 
   /**
+   * Provenance (origin) of this verification. Per authorization-detail.schema.json.
+   * @example "/veratad/roc", "/connect_id", "/stripe"
+   */
+  provenance?: string;
+
+  /**
    * Enable upgrade flow: allow upgrading an existing AgeKey.
    */
   enableUpgrade?: boolean;
@@ -309,6 +325,11 @@ export interface UseAgeKeyClaims {
   verified_after?: string;
   /** Optional method-specific overrides */
   overrides?: Record<string, MethodOverride>;
+  /** Optional provenance filter */
+  provenance?: {
+    allowed?: string[];
+    denied?: string[];
+  };
 }
 
 /**
@@ -335,4 +356,5 @@ export interface AuthorizationDetails {
   verified_at: string;
   verification_id: string;
   attributes?: Record<string, unknown>;
+  provenance?: string;
 }

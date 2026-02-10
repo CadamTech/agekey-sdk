@@ -78,7 +78,7 @@ export class CreateAgeKeyClient {
     // Generate state
     const state = generateState();
 
-    // Build authorization_details
+    // Build authorization_details (per authorization-detail.schema.json)
     const authDetails: AuthorizationDetails[] = [
       {
         type: "age_verification",
@@ -87,6 +87,7 @@ export class CreateAgeKeyClient {
         verified_at: options.verifiedAt.toISOString(),
         verification_id: options.verificationId,
         ...(options.attributes && { attributes: options.attributes }),
+        ...(options.provenance && { provenance: options.provenance }),
       },
     ];
 
