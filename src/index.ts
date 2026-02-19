@@ -64,11 +64,16 @@ export type {
   AgeDateOfBirth,
   AgeYears,
   AgeAtLeastYears,
+  AuthorizationProvenance,
+  MethodOverride,
+  FacialAgeEstimationOverride,
+  MethodOverridesMap,
   // Errors
   AgeKeyErrorCode,
   // Internal (for advanced use)
   Environment,
 } from "./types";
+export { AUTHORIZATION_PROVENANCE } from "./types";
 
 // Utilities (for advanced use cases)
 export {

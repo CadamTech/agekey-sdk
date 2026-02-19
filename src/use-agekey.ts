@@ -20,6 +20,7 @@ import {
   StateMismatchError,
   NonceMismatchError,
   InvalidTokenError,
+  InvalidRequestError,
   mapOidcError,
 } from "./errors";
 import type {
@@ -29,6 +30,7 @@ import type {
   CallbackValidationParams,
   UseAgeKeyResult,
   UseAgeKeyClaims,
+  MethodOverride,
   Environment,
 } from "./types";
 
@@ -84,9 +86,20 @@ export class UseAgeKeyClient {
       claims.verified_after = options.verifiedAfter.toISOString().split("T")[0];
     }
 
-    // Add optional overrides
+    // Add optional overrides (request-claims: facial_age_estimation requires min_age OR age_thresholds)
     if (options.overrides && Object.keys(options.overrides).length > 0) {
-      claims.overrides = options.overrides;
+      const facial = options.overrides.facial_age_estimation;
+      if (facial !== undefined) {
+        const f = facial as { min_age?: number; age_thresholds?: number[] };
+        const hasMinAge = typeof f.min_age === "number";
+        const hasAgeThresholds = Array.isArray(f.age_thresholds) && f.age_thresholds.length > 0;
+        if (!hasMinAge && !hasAgeThresholds) {
+          throw new InvalidRequestError(
+            "overrides.facial_age_estimation requires either min_age or age_thresholds (per request-claims schema)"
+          );
+        }
+      }
+      claims.overrides = options.overrides as Record<string, MethodOverride>;
     }
 
     if (options.provenance && (options.provenance.allowed?.length || options.provenance.denied?.length)) {

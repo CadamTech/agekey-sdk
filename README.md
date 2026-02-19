@@ -30,6 +30,7 @@ const agekey = new AgeKey({
 // 1. Build authorization URL
 const { url, state, nonce } = agekey.useAgeKey.getAuthorizationUrl({
   ageThresholds: [13, 18, 21],     // Ages to verify
+  // provenance: { allowed: ['/connect_id'], denied: ['/legacy/*'] },  // Optional filter
 });
 
 // Store state/nonce in session (needed to validate callback)
@@ -88,6 +89,7 @@ const { authUrl, requestUri, expiresIn } = await agekey.createAgeKey.initiate({
   age: { date_of_birth: '2000-01-15' },
   verifiedAt: new Date(),
   verificationId: 'txn_123456',    // Your unique transaction ID
+  provenance: '/connect_id',       // Required: origin of verification (see Provenance section)
 });
 
 // Redirect user to authUrl
@@ -134,12 +136,19 @@ Build an authorization URL to redirect the user.
 
 ```typescript
 const { url, state, nonce } = agekey.useAgeKey.getAuthorizationUrl({
-  ageThresholds: [18],           // Required: Ages to verify
-  allowedMethods?: [...],        // Optional: Restrict verification methods
-  verifiedAfter?: Date,          // Optional: Require recent verification
-  enableCreate?: boolean,        // Optional: Allow creating AgeKey if none
+  ageThresholds: [18],            // Required: Ages to verify
+  allowedMethods?: [...],         // Optional: Restrict verification methods
+  verifiedAfter?: Date,           // Optional: Require recent verification
+  overrides?: MethodOverridesMap, // Optional: per-method age_thresholds or min_age overrides
+  provenance?: {                  // Optional: Filter by origin (allowed/denied patterns)
+    allowed?: string[],
+    denied?: string[],
+  },
+  enableCreate?: boolean,         // Optional: Allow creating AgeKey if none
 });
 ```
+
+All method overrides accept an optional `age_thresholds` array that maps 1:1 to the root `ageThresholds` (by index). When using `overrides.facial_age_estimation`, **either `min_age` or `age_thresholds` is required** (per request-claims schema `oneOf`). The `FacialAgeEstimationOverride` type enforces this at compile time, and the SDK validates it at runtime.
 
 #### `handleCallback(callbackUrl, validation)`
 
@@ -165,6 +174,7 @@ const { requestUri, expiresIn } = await agekey.createAgeKey.pushAuthorizationReq
   verifiedAt: new Date(),
   verificationId: 'txn_123',
   attributes?: { ... },          // Optional: Method-specific attributes
+  provenance: string,            // Required: origin of verification (see AUTHORIZATION_PROVENANCE)
   enableUpgrade?: boolean,       // Optional: Allow upgrading existing AgeKey
 });
 ```
@@ -187,6 +197,7 @@ const { authUrl, requestUri, expiresIn } = await agekey.createAgeKey.initiate({
   age: { date_of_birth: '2000-01-15' },
   verifiedAt: new Date(),
   verificationId: 'txn_123',
+  provenance: '/connect_id',   // Required (see AUTHORIZATION_PROVENANCE)
 });
 ```
 
@@ -246,6 +257,71 @@ Supported methods for Create AgeKey:
 | `digital_credential` | Digital identity credentials |
 | `national_id_number` | National ID number verification |
 
+## Provenance
+
+**Provenance** identifies the origin of the age verification technology. The SDK supports it in both flows.
+
+### Create AgeKey: Setting provenance
+
+Each age signal you create **must** include a provenance value; it is required by the authorization-detail schema and the SDK does not default it.
+
+Valid values are defined by the AgeKey authorization-detail schema. Use the exported constant for type-safe options (e.g. in dropdowns):
+
+```typescript
+import { AgeKey, AUTHORIZATION_PROVENANCE, type AuthorizationProvenance } from '@openage-agekey/sdk';
+
+// AUTHORIZATION_PROVENANCE is the list of allowed values:
+// "/connect_id", "/stripe", "/inicis", "/singpass", "/privy", "/spruce_id",
+// "/verify_my", "/privately", "/veratad/internal", "/veratad/trinsic", "/veratad/cra", "/veratad/roc"
+
+const { authUrl } = await agekey.createAgeKey.initiate({
+  method: 'digital_credential',
+  age: { at_least_years: 18 },
+  verifiedAt: new Date(),
+  verificationId: 'txn_abc',
+  provenance: '/veratad/roc',   // required
+});
+```
+
+### Use AgeKey: Filtering by provenance
+
+When verifying age (Use flow), you can restrict which age signals are accepted by **allowed** and **denied** provenance patterns (request-claims schema). Denied takes precedence over allowed. Use a `*` suffix for prefix matching (e.g. `'/veratad/*'`).
+
+```typescript
+const { url, state, nonce } = agekey.useAgeKey.getAuthorizationUrl({
+  ageThresholds: [18],
+  provenance: {
+    allowed: ['/connect_id', '/veratad/*'],   // Only accept these origins (max 10)
+    denied: ['/legacy/*'],                    // Exclude these (max 10)
+  },
+});
+```
+
+If you omit `provenance`, all provenances are accepted (no filter).
+
+## Method Overrides
+
+When verifying age (Use flow), you can provide per-method overrides. Each override can include `min_age`, `age_thresholds`, `verified_after`, and `attributes`.
+
+`age_thresholds` maps 1:1 to the root `ageThresholds` by index: `override.age_thresholds[i]` is the minimum age *for that method* needed to satisfy root threshold `i`. Its length must equal the root `ageThresholds` length.
+
+```typescript
+const { url, state, nonce } = agekey.useAgeKey.getAuthorizationUrl({
+  ageThresholds: [13, 18],
+  overrides: {
+    // facial_age_estimation requires either min_age or age_thresholds (oneOf)
+    facial_age_estimation: {
+      min_age: 20,                         // raise the bar for this method
+      attributes: { on_device: true },
+    },
+    // age_thresholds example: [15, 20] means this method needs 15+ for the 13 threshold, 20+ for the 18 threshold
+    payment_card_network: {
+      age_thresholds: [15, 20],
+    },
+  },
+});
+```
+
 ## Age Formats
 
 When creating an AgeKey, specify age in one of these formats:
@@ -274,7 +350,12 @@ import type {
   PARResult,
   VerificationMethod,
   AgeSpec,
+  AuthorizationProvenance,
+  MethodOverride,
+  MethodOverridesMap,
+  FacialAgeEstimationOverride,
 } from '@openage-agekey/sdk';
+import { AUTHORIZATION_PROVENANCE } from '@openage-agekey/sdk';  // list of valid provenance values
 ```
 
 ## Documentation

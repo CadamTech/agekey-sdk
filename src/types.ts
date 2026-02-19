@@ -75,10 +75,10 @@ export interface UseAgeKeyOptions {
   verifiedAfter?: Date;
 
   /**
-   * Method-specific overrides for age verification.
-   * Allows fine-grained control over individual verification methods.
+   * Method-specific overrides for age verification (request-claims.schema.json).
+   * facial_age_estimation requires either min_age or age_thresholds (oneOf).
    */
-  overrides?: Record<VerificationMethod, MethodOverride>;
+  overrides?: MethodOverridesMap;
 
   /**
    * Filter age signals by provenance (origin of verification technology).
@@ -165,6 +165,7 @@ export interface UseAgeKeyResult {
 
 /**
  * Verification methods supported by AgeKey.
+ * Matches authorization-detail.schema.json#/$defs/methods.
  */
 export type VerificationMethod =
   | "id_doc_scan"
@@ -173,6 +174,27 @@ export type VerificationMethod =
   | "email_age_estimation"
   | "digital_credential"
   | "national_id_number";
+
+/**
+ * Allowed provenance values for Create AgeKey (authorization-detail.schema.json).
+ * Required in each authorization_details entry; the SDK does not default it.
+ */
+export const AUTHORIZATION_PROVENANCE = [
+  "/connect_id",
+  "/stripe",
+  "/inicis",
+  "/singpass",
+  "/privy",
+  "/spruce_id",
+  "/verify_my",
+  "/privately",
+  "/veratad/internal",
+  "/veratad/trinsic",
+  "/veratad/cra",
+  "/veratad/roc",
+] as const;
+
+export type AuthorizationProvenance = (typeof AUTHORIZATION_PROVENANCE)[number];
 
 /**
  * Age format: exact date of birth.
@@ -223,17 +245,17 @@ export interface CreateAgeKeyOptions {
    * A unique identifier for this verification (from your system).
    */
   verificationId: string;
+  
+  /**
+   * Provenance (origin) of this verification. Required by authorization-detail.schema.json.
+   * Use AUTHORIZATION_PROVENANCE for valid values (e.g. "/connect_id", "/veratad/roc").
+   */
+  provenance: AuthorizationProvenance | string;
 
   /**
    * Method-specific attributes (e.g., jurisdiction for national_id_number).
    */
   attributes?: Record<string, unknown>;
-
-  /**
-   * Provenance (origin) of this verification. Per authorization-detail.schema.json.
-   * @example "/veratad/roc", "/connect_id", "/stripe"
-   */
-  provenance?: string;
 
   /**
    * Enable upgrade flow: allow upgrading an existing AgeKey.
@@ -313,18 +335,19 @@ export interface Environment {
 }
 
 /**
- * Claims format for Use AgeKey (request-claims schema).
+ * Claims format for Use AgeKey (request-claims.schema.json).
+ * age_thresholds: required, 1-5 unique integers. Other fields optional.
  * @internal
  */
 export interface UseAgeKeyClaims {
-  /** Age thresholds to verify against (1-5 values) */
+  /** Age thresholds to verify against (1-5 values, unique) */
   age_thresholds: number[];
   /** Optional list of allowed verification methods */
   allowed_methods?: VerificationMethod[];
   /** Optional minimum verification date */
   verified_after?: string;
-  /** Optional method-specific overrides */
-  overrides?: Record<string, MethodOverride>;
+  /** Optional method-specific overrides (may include age_thresholds per method) */
+  overrides?: Record<string, MethodOverride | FacialAgeEstimationOverride>;
   /** Optional provenance filter */
   provenance?: {
     allowed?: string[];
@@ -333,12 +356,17 @@ export interface UseAgeKeyClaims {
 }
 
 /**
- * Method-specific override for age verification.
- * @internal
+ * Method-specific override for age verification (request-claims.schema.json overrides).
+ *
+ * age_thresholds maps 1:1 to root age_thresholds by index: override[i] is the
+ * minimum age (for this method) required to satisfy root threshold i.
+ * Length must equal root age_thresholds length; order corresponds to sorted root age_thresholds.
  */
 export interface MethodOverride {
   /** Minimum age threshold for this method */
   min_age?: number;
+  /** Per-threshold age overrides (maps 1:1 to root age_thresholds, 1-5 items) */
+  age_thresholds?: number[];
   /** Minimum verification date for this method */
   verified_after?: string;
   /** Method-specific attributes */
@@ -346,7 +374,45 @@ export interface MethodOverride {
 }
 
 /**
- * Authorization details format for Create AgeKey.
+ * Override for facial_age_estimation. Per request-claims.schema.json oneOf,
+ * either min_age OR age_thresholds is required when this method is in overrides.
+ */
+export type FacialAgeEstimationOverride =
+  | FacialOverrideWithMinAge
+  | FacialOverrideWithAgeThresholds;
+
+interface FacialOverrideBase {
+  verified_after?: string;
+  attributes?: { on_device?: boolean };
+}
+
+interface FacialOverrideWithMinAge extends FacialOverrideBase {
+  min_age: number;
+  age_thresholds?: number[];
+}
+
+interface FacialOverrideWithAgeThresholds extends FacialOverrideBase {
+  min_age?: number;
+  age_thresholds: number[];
+}
+
+/**
+ * Method-specific overrides map (request-claims.schema.json).
+ * All methods support optional age_thresholds array.
+ * facial_age_estimation requires either min_age or age_thresholds (oneOf).
+ */
+export interface MethodOverridesMap {
+  email_age_estimation?: MethodOverride;
+  facial_age_estimation?: FacialAgeEstimationOverride;
+  national_id_number?: MethodOverride;
+  digital_credential?: MethodOverride;
+  id_doc_scan?: MethodOverride;
+  payment_card_network?: MethodOverride;
+}
+
+/**
+ * Authorization details format for Create AgeKey (authorization-detail.schema.json).
+ * provenance is required by the schema.
  * @internal
  */
 export interface AuthorizationDetails {
@@ -355,6 +421,6 @@ export interface AuthorizationDetails {
   age: AgeSpec;
   verified_at: string;
   verification_id: string;
+  provenance: string;
   attributes?: Record<string, unknown>;
-  provenance?: string;
 }
