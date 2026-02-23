@@ -272,7 +272,8 @@ import { AgeKey, AUTHORIZATION_PROVENANCE, type AuthorizationProvenance } from '
 
 // AUTHORIZATION_PROVENANCE is the list of allowed values:
 // "/connect_id", "/stripe", "/inicis", "/singpass", "/privy", "/spruce_id",
-// "/verify_my", "/privately", "/veratad/internal", "/veratad/trinsic", "/veratad/cra", "/veratad/roc"
+// "/verify_my", "/privately", "/veratad/internal", "/veratad/trinsic", "/veratad/cra", "/veratad/roc",
+// "/yoti", "/meta"
 
 const { authUrl } = await agekey.createAgeKey.initiate({
   method: 'digital_credential',

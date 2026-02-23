@@ -192,6 +192,8 @@ export const AUTHORIZATION_PROVENANCE = [
   "/veratad/trinsic",
   "/veratad/cra",
   "/veratad/roc",
+  "/yoti",
+  "/meta",
 ] as const;
 
 export type AuthorizationProvenance = (typeof AUTHORIZATION_PROVENANCE)[number];
