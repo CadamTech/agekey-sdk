@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for auto-fixable lint issues
+        run: |
+          npm run lint:fix
+          if ! git diff --quiet; then
+            echo "::error::Auto-fixable lint issues detected. Run 'npm run lint:fix' locally and commit the changes."
+            git diff --stat
+            exit 1
+          fi
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  commitlint:
+    name: Commit Messages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate commit messages
+        run: |
+          # Only validate the tip commit. Use format "type: subject" with NO space before the colon.
+          # Examples: "fix: validate only tip commit"  "feat: add X"  "docs: update README"
+          npx commitlint --from ${{ github.event.pull_request.head.sha }}^ --to ${{ github.event.pull_request.head.sha }} --verbose

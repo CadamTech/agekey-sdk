@@ -1,6 +1,6 @@
 {
   "name": "@openage-agekey/sdk",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Official AgeKey SDK for age verification integration",
   "author": "AgeKey <support@agekey.org>",
   "license": "MIT",
@@ -41,11 +41,16 @@
     "prepublishOnly": "npm run build && npm run test"
   },
   "devDependencies": {
+    "@commitlint/config-conventional": "^20.4.2",
     "@eslint/js": "^9.0.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "^2.0.0",
+    "commitlint": "^20.4.2",
     "eslint": "^9.0.0",
     "globals": "^15.0.0",
+    "semantic-release": "^25.0.3",
     "tsup": "^8.0.0",
     "typescript": "^5.3.3",
     "typescript-eslint": "^8.0.0",
