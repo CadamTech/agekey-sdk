@@ -46,8 +46,8 @@ jobs:
       - name: Build
         run: npm run build
 
-  version-check:
-    name: Version Increment Check
+  commitlint:
+    name: Commit Messages
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -59,27 +59,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      - name: Check version was incremented
-        run: |
-          PR_VERSION=$(node -p "require('./package.json').version")
-          BASE_VERSION=$(git show origin/${{ github.base_ref }}:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version")
+      - name: Install dependencies
+        run: npm ci
 
-          echo "Base (${{ github.base_ref }}): $BASE_VERSION"
-          echo "PR branch:                    $PR_VERSION"
-
-          node -e "
-            const [baseMajor, baseMinor, basePatch] = '${BASE_VERSION}'.split('.').map(Number);
-            const [prMajor, prMinor, prPatch] = '${PR_VERSION}'.split('.').map(Number);
-
-            if (prMajor > baseMajor ||
-                (prMajor === baseMajor && prMinor > baseMinor) ||
-                (prMajor === baseMajor && prMinor === baseMinor && prPatch > basePatch)) {
-              process.exit(0);
-            }
-
-            console.error('Version in package.json must be incremented before merging to ${{ github.base_ref }}.');
-            console.error('Current: ${PR_VERSION}  Base: ${BASE_VERSION}');
-            console.error('Run: npm version patch   (or minor / major)');
-            process.exit(1);
-          "
+      - name: Validate commit messages
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
