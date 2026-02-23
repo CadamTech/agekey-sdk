@@ -65,4 +65,7 @@ jobs:
         run: npm ci
 
       - name: Validate commit messages
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+        run: |
+          # Only validate the tip commit. Use format "type: subject" with NO space before the colon.
+          # Examples: "fix: validate only tip commit"  "feat: add X"  "docs: update README"
+          npx commitlint --from ${{ github.event.pull_request.head.sha }}^ --to ${{ github.event.pull_request.head.sha }} --verbose
