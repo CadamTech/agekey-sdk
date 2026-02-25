@@ -1,23 +1,7 @@
-/**
- * @agekey/sdk - Error Classes
- *
- * Typed errors for AgeKey SDK operations.
- */
-
 import type { AgeKeyErrorCode } from "./types";
 
-/**
- * Base error class for all AgeKey SDK errors.
- */
 export class AgeKeyError extends Error {
-  /**
-   * Machine-readable error code.
-   */
   readonly code: AgeKeyErrorCode;
-
-  /**
-   * Optional documentation URL for troubleshooting.
-   */
   readonly docsUrl?: string;
 
   constructor(
@@ -30,17 +14,12 @@ export class AgeKeyError extends Error {
     this.code = code;
     this.docsUrl = options?.docsUrl;
 
-    // Maintain proper stack trace in V8 environments
     if (typeof Error.captureStackTrace === "function") {
       Error.captureStackTrace(this, this.constructor);
     }
   }
 }
 
-/**
- * Thrown when the state parameter in the callback doesn't match the original request.
- * This usually indicates a CSRF attack or expired session.
- */
 export class StateMismatchError extends AgeKeyError {
   constructor(message?: string) {
     super(
@@ -54,10 +33,6 @@ export class StateMismatchError extends AgeKeyError {
   }
 }
 
-/**
- * Thrown when the nonce in the ID token doesn't match the original request.
- * This could indicate a replay attack.
- */
 export class NonceMismatchError extends AgeKeyError {
   constructor(message?: string) {
     super(
@@ -71,13 +46,7 @@ export class NonceMismatchError extends AgeKeyError {
   }
 }
 
-/**
- * Thrown when the user denies the age verification request.
- */
 export class AccessDeniedError extends AgeKeyError {
-  /**
-   * Additional description from the OIDC error response.
-   */
   readonly errorDescription?: string;
 
   constructor(errorDescription?: string) {
@@ -92,9 +61,6 @@ export class AccessDeniedError extends AgeKeyError {
   }
 }
 
-/**
- * Thrown when the ID token is invalid or cannot be decoded.
- */
 export class InvalidTokenError extends AgeKeyError {
   constructor(message?: string) {
     super(
@@ -106,9 +72,6 @@ export class InvalidTokenError extends AgeKeyError {
   }
 }
 
-/**
- * Thrown when the OIDC request is malformed.
- */
 export class InvalidRequestError extends AgeKeyError {
   constructor(message: string) {
     super("invalid_request", message, {
@@ -118,9 +81,6 @@ export class InvalidRequestError extends AgeKeyError {
   }
 }
 
-/**
- * Thrown when the client credentials are invalid or not authorized.
- */
 export class UnauthorizedClientError extends AgeKeyError {
   constructor(message?: string) {
     super(
@@ -133,9 +93,6 @@ export class UnauthorizedClientError extends AgeKeyError {
   }
 }
 
-/**
- * Thrown when the AgeKey server returns an error.
- */
 export class ServerError extends AgeKeyError {
   constructor(message?: string) {
     super(
@@ -147,9 +104,6 @@ export class ServerError extends AgeKeyError {
   }
 }
 
-/**
- * Thrown when a network error occurs during API calls.
- */
 export class NetworkError extends AgeKeyError {
   constructor(message?: string, cause?: unknown) {
     super("network_error", message || "Network error during API request.", {
@@ -159,13 +113,6 @@ export class NetworkError extends AgeKeyError {
   }
 }
 
-/**
- * Maps an OIDC error code to the appropriate AgeKeyError class.
- *
- * @param error - OIDC error code
- * @param errorDescription - Optional error description
- * @returns Appropriate AgeKeyError instance
- */
 export function mapOidcError(
   error: string,
   errorDescription?: string
