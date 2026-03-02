@@ -71,7 +71,7 @@ export class UseAgeKeyClient {
     const params = new URLSearchParams({
       client_id: this.config.clientId,
       redirect_uri: this.config.redirectUri,
-      response_type: RESPONSE_TYPES.idToken,
+      response_type: options.enableUpgrade ? RESPONSE_TYPES.upgrade : RESPONSE_TYPES.idToken,
       scope: options.enableCreate ? SCOPES.upgrade : SCOPES.openid,
       state,
       nonce,

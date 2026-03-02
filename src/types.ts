@@ -94,6 +94,11 @@ export interface UseAgeKeyOptions {
   enableCreate?: boolean;
 
   /**
+   * Enable upgrade flow: if user doesn't have an AgeKey, prompt to create one.
+   */
+  enableUpgrade?: boolean;
+
+  /**
    * Additional state to include in the callback.
    * Will be returned unchanged in the callback URL.
    */

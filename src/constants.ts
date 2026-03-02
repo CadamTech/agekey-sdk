@@ -34,5 +34,6 @@ export const SCOPES = {
 
 export const RESPONSE_TYPES = {
   idToken: "id_token",
+  upgrade: "id_token code",
   none: "none",
 } as const;
