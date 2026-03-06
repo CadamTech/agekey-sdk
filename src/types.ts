@@ -94,6 +94,11 @@ export interface UseAgeKeyOptions {
   enableCreate?: boolean;
 
   /**
+   * Enable upgrade flow: if user doesn't have an AgeKey, prompt to create one.
+   */
+  enableUpgrade?: boolean;
+
+  /**
    * Additional state to include in the callback.
    * Will be returned unchanged in the callback URL.
    */
@@ -152,6 +157,12 @@ export interface UseAgeKeyResult {
    * The user's unique identifier within AgeKey.
    */
   subject?: string;
+
+  /**
+   * Authorization code for the token exchange (present when enableUpgrade was used).
+   * Pass this to `upgradeDirect.exchangeCode()` to obtain an access token.
+   */
+  code?: string;
 
   /**
    * Raw decoded ID token payload (for advanced use cases).
@@ -301,6 +312,81 @@ export interface CreateAgeKeyResult {
 }
 
 // =============================================================================
+// Upgrade Direct Types
+// =============================================================================
+
+/**
+ * Options for upgrading an existing AgeKey with a new age signal (server-side).
+ * Used with the Upgrade Direct flow after obtaining an access token.
+ */
+export interface UpgradeDirectOptions {
+  /**
+   * The verification method used.
+   */
+  method: VerificationMethod;
+
+  /**
+   * The verified age information.
+   */
+  age: AgeSpec;
+
+  /**
+   * When the verification occurred.
+   */
+  verifiedAt: Date;
+
+  /**
+   * A unique identifier for this verification (from your system).
+   */
+  verificationId: string;
+
+  /**
+   * Provenance (origin) of this verification. Required by authorization-detail.schema.json.
+   */
+  provenance: AuthorizationProvenance | string;
+
+  /**
+   * Method-specific attributes (e.g., jurisdiction for national_id_number).
+   */
+  attributes?: Record<string, unknown>;
+}
+
+/**
+ * Result from exchanging an authorization code for an access token.
+ */
+export interface ExchangeTokenResult {
+  /**
+   * The access token to use for the upgrade request.
+   */
+  accessToken: string;
+
+  /**
+   * Token type (always "Bearer").
+   */
+  tokenType: string;
+
+  /**
+   * How long the token is valid (in seconds).
+   */
+  expiresIn: number;
+}
+
+/**
+ * Result from a direct upgrade request.
+ */
+export interface UpgradeDirectResult {
+  /**
+   * Whether the upgrade was successful.
+   */
+  success: boolean;
+
+  /**
+   * Error message if the upgrade failed.
+   */
+  error?: string;
+}
+
+// =============================================================================
 // Error Types
 // =============================================================================
 
@@ -334,6 +420,8 @@ export interface Environment {
   useEndpoint: string;
   createEndpoint: string;
   parEndpoint: string;
+  tokenEndpoint: string;
+  upgradeEndpoint: string;
 }
 
 /**

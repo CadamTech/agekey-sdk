@@ -78,15 +78,26 @@ describe("Use AgeKey", () => {
       expect(claims.verified_after).toBe("2024-01-01");
     });
 
-    it("sets upgrade scope when enableCreate is true", () => {
+    it("sets upgrade scope and response_type when enableUpgrade is true", () => {
+      const agekey = createClient();
+      const { url } = agekey.useAgeKey.getAuthorizationUrl({
+        ageThresholds: [18],
+        enableUpgrade: true,
+      });
+
+      expect(url).toContain("scope=openid+agekey.upgrade");
+      expect(url).toContain("response_type=id_token+code");
+    });
+
+    it("sets can_create flag when enableCreate is true", () => {
       const agekey = createClient();
       const { url } = agekey.useAgeKey.getAuthorizationUrl({
         ageThresholds: [18],
         enableCreate: true,
       });
 
-      expect(url).toContain("scope=openid+agekey.upgrade");
       expect(url).toContain("can_create=true");
+      expect(url).toContain("scope=openid&");
     });
 
     it("includes overrides when specified", () => {

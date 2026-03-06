@@ -107,6 +107,52 @@ if (result.success) {
 }
 ```
 
+### Upgrade Direct: Add Age Signal to Existing AgeKey
+
+Add a new age signal to an existing AgeKey server-side, without WebAuthn. Requires the Use flow to be completed with `enableUpgrade: true`.
+
+```typescript
+import { AgeKey } from '@openage-agekey/sdk';
+
+// Initialize with client secret (server-side only!)
+const agekey = new AgeKey({
+  clientId: 'ak_test_xxxx',
+  clientSecret: 'sk_test_xxxx',
+  redirectUri: 'https://myapp.com/callback',
+});
+
+// 1. Start Use flow with enableUpgrade
+const { url, state, nonce } = agekey.useAgeKey.getAuthorizationUrl({
+  ageThresholds: [18],
+  enableUpgrade: true,
+});
+// Store state/nonce, redirect user to url...
+```
+
+```typescript
+// 2. Handle callback — extract the authorization code
+const result = agekey.useAgeKey.handleCallback(callbackUrl, { state, nonce });
+const { code } = result; // present when enableUpgrade was used
+```
+
+```typescript
+// 3. Exchange code for access token (server-side)
+const { accessToken } = await agekey.upgradeDirect.exchangeCode(code);
+
+// 4. Upgrade the AgeKey with a new age signal
+const upgradeResult = await agekey.upgradeDirect.upgrade(accessToken, {
+  method: 'id_doc_scan',
+  age: { date_of_birth: '2000-01-15' },
+  verifiedAt: new Date(),
+  verificationId: 'txn_789',
+  provenance: '/connect_id',
+});
+
+if (upgradeResult.success) {
+  console.log("AgeKey upgraded successfully!");
+}
+```
+
 ## API Reference
 
 ### `AgeKey` Class
@@ -124,6 +170,7 @@ const agekey = new AgeKey({
 **Properties:**
 - `agekey.useAgeKey` - Use AgeKey namespace
 - `agekey.createAgeKey` - Create AgeKey namespace
+- `agekey.upgradeDirect` - Upgrade Direct namespace
 - `agekey.isTestMode` - Whether using test credentials
 - `agekey.clientId` - The client ID
 - `agekey.redirectUri` - The redirect URI
@@ -144,7 +191,8 @@ const { url, state, nonce } = agekey.useAgeKey.getAuthorizationUrl({
     allowed?: string[],
     denied?: string[],
   },
-  enableCreate?: boolean,         // Optional: Allow creating AgeKey if none
+  enableCreate?: boolean,         // Optional: Show "create AgeKey" button if user has none
+  enableUpgrade?: boolean,        // Optional: Allow upgrading an existing AgeKey
 });
 ```
 
@@ -158,6 +206,7 @@ Validate the callback and extract age verification results.
 const result = agekey.useAgeKey.handleCallback(callbackUrl, { state, nonce });
 // result.ageThresholds: { "18": true, "21": false }
 // result.subject: "user_123" (optional)
+// result.code: "abc123" (present when enableUpgrade was used)
 // result.raw: { ... } (full JWT payload)
 ```
 
@@ -199,6 +248,32 @@ const { authUrl, requestUri, expiresIn } = await agekey.createAgeKey.initiate({
   verificationId: 'txn_123',
   provenance: '/connect_id',   // Required (see AUTHORIZATION_PROVENANCE)
 });
+```
+
+### Upgrade Direct Namespace
+
+#### `exchangeCode(code)` (server-side)
+
+Exchange an authorization code from the Use callback for an access token.
+
+```typescript
+const { accessToken, tokenType, expiresIn } = await agekey.upgradeDirect.exchangeCode(code);
+```
+
+#### `upgrade(accessToken, options)` (server-side)
+
+Add an age signal to an existing AgeKey using an access token.
+
+```typescript
+const result = await agekey.upgradeDirect.upgrade(accessToken, {
+  method: 'id_doc_scan',
+  age: { date_of_birth: '2000-01-15' },
+  verifiedAt: new Date(),
+  verificationId: 'txn_123',
+  provenance: '/connect_id',
+  attributes?: { ... },          // Optional: Method-specific attributes
+});
+// result.success: true
 ```
 
 ## Error Handling
@@ -349,6 +424,9 @@ import type {
   UseAgeKeyResult,
   CreateAgeKeyOptions,
   PARResult,
+  UpgradeDirectOptions,
+  ExchangeTokenResult,
+  UpgradeDirectResult,
   VerificationMethod,
   AgeSpec,
   AuthorizationProvenance,
