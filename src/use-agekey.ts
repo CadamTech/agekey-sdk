@@ -72,7 +72,7 @@ export class UseAgeKeyClient {
       client_id: this.config.clientId,
       redirect_uri: this.config.redirectUri,
       response_type: options.enableUpgrade ? RESPONSE_TYPES.upgrade : RESPONSE_TYPES.idToken,
-      scope: options.enableCreate ? SCOPES.upgrade : SCOPES.openid,
+      scope: options.enableUpgrade ? SCOPES.upgrade : SCOPES.openid,
       state,
       nonce,
       claims: JSON.stringify(claims),
@@ -130,15 +130,19 @@ export class UseAgeKeyClient {
       throw new InvalidTokenError("No age_thresholds in ID token");
     }
 
+    const code = params.get("code") || undefined;
+
     return {
       ageThresholds: ageThresholds as Record<string, boolean>,
       subject: typeof payload["sub"] === "string" ? payload["sub"] : undefined,
+      code,
       raw: payload,
     };
   }
 
   parseCallback(callbackUrl: string): {
     idToken: string | null;
+    code: string | null;
     state: string | null;
     error: string | null;
     errorDescription: string | null;
@@ -148,6 +152,7 @@ export class UseAgeKeyClient {
 
     return {
       idToken: params.get("id_token"),
+      code: params.get("code"),
       state: params.get("state"),
       error: params.get("error"),
       errorDescription: params.get("error_description"),

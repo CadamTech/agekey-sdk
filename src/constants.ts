@@ -4,6 +4,8 @@ export const AGEKEY_ENDPOINTS = {
     use: "https://api-test.agekey.org/v1/oidc/use",
     create: "https://api-test.agekey.org/v1/oidc/create",
     par: "https://api-test.agekey.org/v1/oidc/create/par",
+    token: "https://api-test.agekey.org/v1/oidc/use/token",
+    upgrade: "https://api-test.agekey.org/v1/agekey/upgrade",
     jwks: "https://api-test.agekey.org/.well-known/jwks.json",
   },
   live: {
@@ -11,6 +13,8 @@ export const AGEKEY_ENDPOINTS = {
     use: "https://api.agekey.org/v1/oidc/use",
     create: "https://api.agekey.org/v1/oidc/create",
     par: "https://api.agekey.org/v1/oidc/create/par",
+    token: "https://api.agekey.org/v1/oidc/use/token",
+    upgrade: "https://api.agekey.org/v1/agekey/upgrade",
     jwks: "https://api.agekey.org/.well-known/jwks.json",
   },
 } as const;

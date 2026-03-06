@@ -24,6 +24,8 @@ export function getEnvironment(clientId: string, apiBaseUrlOverride?: string): E
       useEndpoint: `${apiBaseUrlOverride}/v1/oidc/use`,
       createEndpoint: `${apiBaseUrlOverride}/v1/oidc/create`,
       parEndpoint: `${apiBaseUrlOverride}/v1/oidc/create/par`,
+      tokenEndpoint: `${apiBaseUrlOverride}/v1/oidc/use/token`,
+      upgradeEndpoint: `${apiBaseUrlOverride}/v1/agekey/upgrade`,
     };
   }
   return {
@@ -32,5 +34,7 @@ export function getEnvironment(clientId: string, apiBaseUrlOverride?: string): E
     useEndpoint: endpoints.use,
     createEndpoint: endpoints.create,
     parEndpoint: endpoints.par,
+    tokenEndpoint: endpoints.token,
+    upgradeEndpoint: endpoints.upgrade,
   };
 }

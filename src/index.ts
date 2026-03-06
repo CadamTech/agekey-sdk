@@ -1,6 +1,7 @@
 export { AgeKey } from "./client";
 export { UseAgeKeyClient } from "./use-agekey";
 export { CreateAgeKeyClient } from "./create-agekey";
+export { UpgradeDirectClient } from "./upgrade-direct";
 
 export {
   AgeKeyError,
@@ -27,6 +28,10 @@ export type {
   CreateAgeKeyOptions,
   PARResult,
   CreateAgeKeyResult,
+  // Upgrade Direct
+  UpgradeDirectOptions,
+  ExchangeTokenResult,
+  UpgradeDirectResult,
   VerificationMethod,
   AgeSpec,
   AgeDateOfBirth,
