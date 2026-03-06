@@ -19,32 +19,32 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '22'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm ci
 
       - name: Check for auto-fixable lint issues
         run: |
-          npm run lint:fix
+          pnpm run lint:fix
           if ! git diff --quiet; then
-            echo "::error::Auto-fixable lint issues detected. Run 'npm run lint:fix' locally and commit the changes."
+            echo "::error::Auto-fixable lint issues detected. Run 'pnpm run lint:fix' locally and commit the changes."
             git diff --stat
             exit 1
           fi
 
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
 
       - name: Type check
-        run: npm run typecheck
+        run: pnpm run typecheck
 
       - name: Test
-        run: npm test
+        run: pnpm test
 
       - name: Build
-        run: npm run build
+        run: pnpm run build
 
   commitlint:
     name: Commit Messages
@@ -58,11 +58,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '22'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm ci
 
       - name: Validate commit messages
         run: |
