@@ -65,6 +65,8 @@ export interface UseAgeKeyOptions {
 
   /**
    * Allowed verification methods. If omitted, all methods are allowed.
+   * Use {@link verificationMethodsFromAuthorizationDetailSchema} after
+   * {@link fetchAuthorizationDetailSchema} for the canonical list.
    */
   allowedMethods?: VerificationMethod[];
 
@@ -175,39 +177,12 @@ export interface UseAgeKeyResult {
 // =============================================================================
 
 /**
- * Verification methods supported by AgeKey.
- * Matches authorization-detail.schema.json#/$defs/methods.
+ * Verification method identifier (e.g. `digital_credential`).
+ * Canonical values come from schemas.agekey.org — use
+ * {@link verificationMethodsFromAuthorizationDetailSchema} with
+ * {@link fetchAuthorizationDetailSchema}.
  */
-export type VerificationMethod =
-  | "id_doc_scan"
-  | "payment_card_network"
-  | "facial_age_estimation"
-  | "email_age_estimation"
-  | "digital_credential"
-  | "national_id_number";
-
-/**
- * Allowed provenance values for Create AgeKey (authorization-detail.schema.json).
- * Required in each authorization_details entry; the SDK does not default it.
- */
-export const AUTHORIZATION_PROVENANCE = [
-  "/connect_id",
-  "/stripe",
-  "/inicis",
-  "/singpass",
-  "/privy",
-  "/spruce_id",
-  "/verify_my",
-  "/privately",
-  "/veratad/internal",
-  "/veratad/trinsic",
-  "/veratad/cra",
-  "/veratad/roc",
-  "/yoti",
-  "/meta",
-] as const;
-
-export type AuthorizationProvenance = (typeof AUTHORIZATION_PROVENANCE)[number];
+export type VerificationMethod = string;
 
 /**
  * Age format: exact date of birth.
@@ -261,9 +236,11 @@ export interface CreateAgeKeyOptions {
   
   /**
    * Provenance (origin) of this verification. Required by authorization-detail.schema.json.
-   * Use AUTHORIZATION_PROVENANCE for valid values (e.g. "/connect_id", "/veratad/roc").
+   * Use {@link provenancePathsFromAuthorizationDetailSchema} after
+   * {@link fetchAuthorizationDetailSchema}, or {@link activeProviderPathsFromProvenanceConfig}
+   * after {@link fetchProvenanceConfig}, for allowed paths.
    */
-  provenance: AuthorizationProvenance | string;
+  provenance: string;
 
   /**
    * Method-specific attributes (e.g., jurisdiction for national_id_number).
@@ -343,7 +320,7 @@ export interface UpgradeDirectOptions {
   /**
    * Provenance (origin) of this verification. Required by authorization-detail.schema.json.
    */
-  provenance: AuthorizationProvenance | string;
+  provenance: string;
 
   /**
    * Method-specific attributes (e.g., jurisdiction for national_id_number).

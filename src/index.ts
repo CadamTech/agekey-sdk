@@ -37,7 +37,6 @@ export type {
   AgeDateOfBirth,
   AgeYears,
   AgeAtLeastYears,
-  AuthorizationProvenance,
   MethodOverride,
   FacialAgeEstimationOverride,
   MethodOverridesMap,
@@ -46,8 +45,31 @@ export type {
   // Internal (for advanced use)
   Environment,
 } from "./types";
-export { AUTHORIZATION_PROVENANCE } from "./types";
 
 export { generateToken, decodeJwtPayload, getEnvironment } from "./utils";
+
+export {
+  DEFAULT_PROVENANCE_CONFIG_URL,
+  DEFAULT_AUTHORIZATION_DETAIL_SCHEMA_URL,
+  clearSsotCache,
+  fetchProvenanceConfig,
+  fetchAuthorizationDetailSchema,
+  verificationMethodsFromAuthorizationDetailSchema,
+  digitalCredentialPlatformsFromAuthorizationDetailSchema,
+  provenancePathsFromAuthorizationDetailSchema,
+  activeProviderPathsFromProvenanceConfig,
+  providerEntryFromProvenanceConfig,
+  providerPathsForMethodFromProvenanceConfig,
+  methodsForProviderPathFromProvenanceConfig,
+  verificationMethodKeysFromProvenanceConfig,
+} from "./ssot";
+
+export type {
+  FetchLike,
+  SsotFetchOptions,
+  AuthorizationDetailSchema,
+  ProvenanceProviderEntry,
+  ProvenanceConfigDocument,
+} from "./ssot";
 
 export { AGEKEY_ENDPOINTS, CREDENTIAL_PREFIXES } from "./constants";

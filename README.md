@@ -12,6 +12,10 @@ pnpm add @openage-agekey/sdk
 yarn add @openage-agekey/sdk
 ```
 
+### Upgrading (SSOT-related breaking changes)
+
+Versions that removed the hard-coded **`AUTHORIZATION_PROVENANCE`** list and **`AuthorizationProvenance`** in favor of runtime SSOT fetchers are a **semver major** upgrade for consumers that imported those symbols. Replace them with **`fetchAuthorizationDetailSchema`**, **`fetchProvenanceConfig`**, and the helper functions documented under [Verification methods and provenance (SSOT)](#verification-methods-and-provenance-ssot).
+
 ## Quick Start
 
 ### Use AgeKey: Verify Age
@@ -223,7 +227,7 @@ const { requestUri, expiresIn } = await agekey.createAgeKey.pushAuthorizationReq
   verifiedAt: new Date(),
   verificationId: 'txn_123',
   attributes?: { ... },          // Optional: Method-specific attributes
-  provenance: string,            // Required: origin of verification (see AUTHORIZATION_PROVENANCE)
+  provenance: string,            // Required: origin of verification (load from SSOT; see Provenance)
   enableUpgrade?: boolean,       // Optional: Allow upgrading existing AgeKey
 });
 ```
@@ -246,7 +250,7 @@ const { authUrl, requestUri, expiresIn } = await agekey.createAgeKey.initiate({
   age: { date_of_birth: '2000-01-15' },
   verifiedAt: new Date(),
   verificationId: 'txn_123',
-  provenance: '/connect_id',   // Required (see AUTHORIZATION_PROVENANCE)
+  provenance: '/connect_id',   // Required — use SSOT helpers (see Provenance)
 });
 ```
 
@@ -319,18 +323,98 @@ const agekey = new AgeKey({ clientId: 'ak_test_xxx', ... });
 console.log(agekey.isTestMode); // true
 ```
 
-## Verification Methods
+## Verification methods and provenance (SSOT)
 
-Supported methods for Create AgeKey:
+Public metadata for verification **methods**, **provenance paths**, **digital-credential platforms**, and the **provenance bundle** (providers, methods per provider, jurisdictions) is published on **schemas.agekey.org**. The SSOT loader functions fetch that metadata so UIs and tooling can align with what the AgeKey API expects—without shipping a hard-coded list in your app.
 
-| Method | Description |
-|--------|-------------|
-| `id_doc_scan` | Government ID document scan |
-| `payment_card_network` | Credit/debit card verification |
-| `facial_age_estimation` | AI-based facial age estimation |
-| `email_age_estimation` | Email-based age signals |
-| `digital_credential` | Digital identity credentials |
-| `national_id_number` | National ID number verification |
+These loaders are **helpers only**. They do not perform age verification and they are **not** a substitute for API-side validation. If the network fails or the JSON shape changes, handle errors and empty results in your own code.
+
+### Default URLs
+
+| Document | Constant | Purpose |
+|----------|----------|---------|
+| `authorization-detail.schema.json` | `DEFAULT_AUTHORIZATION_DETAIL_SCHEMA_URL` | JSON Schema: `provenance` enum, `$defs.methods`, `digital_credential_platforms`, … |
+| `provenance-config.json` | `DEFAULT_PROVENANCE_CONFIG_URL` | SSOT bundle: provider paths, `methods` per provider, `jurisdictions`, `verification_methods` catalog |
+
+### Schema vs provenance-config (which to use)
+
+The two documents can differ over time (different publication pipelines). Use them for different jobs:
+
+| Need | Prefer |
+|------|--------|
+| List of **verification method** ids (`id_doc_scan`, …) | `verificationMethodsFromAuthorizationDetailSchema` |
+| List of **platform** values for `digital_credential` | `digitalCredentialPlatformsFromAuthorizationDetailSchema` |
+| Flat list of **provenance** strings as in the published schema enum | `provenancePathsFromAuthorizationDetailSchema` |
+| **Which provenance paths exist** as providers, **active** vs inactive, **which methods** a path supports, **jurisdictions** | `fetchProvenanceConfig` + `activeProviderPathsFromProvenanceConfig`, `providerPathsForMethodFromProvenanceConfig`, `methodsForProviderPathFromProvenanceConfig`, `verificationMethodKeysFromProvenanceConfig` |
+
+For **Create / Upgrade** flows, the value you send as `provenance` must satisfy **both** the authorization-detail schema (and related rules) **and** the live provenance SSOT where the API enforces it. When in doubt, intersect lists from the schema and from `provenance-config`, or drive the UI from **provenance-config** and restrict by method using `providerPathsForMethodFromProvenanceConfig`.
+
+### Caching and freshness
+
+- Successful responses are cached **in memory per URL** for the lifetime of the process (or tab). There is **no built-in TTL**.
+- Long-running servers or single-page apps that stay open for days may show **stale** method or provenance lists until you refetch. Mitigations: call **`clearSsotCache()`** then fetch again after deploys or on a timer; restart workers; or refetch on a schedule that matches your operational needs.
+- The loader passes **`cache: 'force-cache'`** to `fetch` so normal **HTTP cache headers** from the CDN still apply at the network layer; the in-memory cache is stricter and does not revalidate automatically.
+
+### Assumed JSON shape (drift and empty results)
+
+Helpers read a **fixed** subset of the published JSON:
+
+- Methods: `$defs.methods.enum`
+- Digital credential platforms: `$defs.digital_credential_platforms.enum`
+- Provenance strings from the schema: `properties.provenance.enum`
+
+If the published documents change structure (for example enums move behind `allOf` or keys are renamed), these functions return **empty arrays** instead of throwing. Treat **empty** results as a signal to fix your integration or pin a **`url`** to a known-good document revision (see below).
+
+### Security
+
+- Only pass **`url`** values you **trust** (your own CDN mirror or AgeKey’s official host). Never pass user-controlled input as `url`—that would be **server-side request forgery (SSRF)** risk in Node and a redirect/open-proxy risk in some setups.
+- **`fetchImpl`** should be your own `fetch` wrapper only when you need cookies, proxies, or test doubles—not arbitrary caller input.
+
+### Pinning and staging
+
+- Default URLs use the **`current/`** path so you always track the latest published metadata.
+- For reproducible builds, compliance snapshots, or air-gapped mirrors, pass an explicit **`url`** to your **versioned** copy of the same files and optionally a custom **`fetchImpl`**.
+- For staging, point **`url`** at your staging CDN; call **`clearSsotCache()`** when switching environments in the same process.
+
+### TypeScript note
+
+`VerificationMethod` is typed as **`string`**. Canonical values are only known at runtime from the SSOT helpers above; keep validation or allowlists in application code if you need stricter guarantees.
+
+### Example: populate dropdowns (browser or server)
+
+```typescript
+import {
+  fetchAuthorizationDetailSchema,
+  fetchProvenanceConfig,
+  verificationMethodsFromAuthorizationDetailSchema,
+  provenancePathsFromAuthorizationDetailSchema,
+  activeProviderPathsFromProvenanceConfig,
+  providerPathsForMethodFromProvenanceConfig,
+  clearSsotCache,
+} from '@openage-agekey/sdk';
+
+async function loadSsot() {
+  const [schema, provCfg] = await Promise.all([
+    fetchAuthorizationDetailSchema(),
+    fetchProvenanceConfig(),
+  ]);
+
+  const methods = verificationMethodsFromAuthorizationDetailSchema(schema);
+  const provenanceFromSchema = provenancePathsFromAuthorizationDetailSchema(schema);
+  const activeProviders = activeProviderPathsFromProvenanceConfig(provCfg);
+  const providersForDigitalCred = providerPathsForMethodFromProvenanceConfig(
+    provCfg,
+    'digital_credential',
+  );
+
+  // After a known SSOT rollout, optionally force a refetch:
+  // clearSsotCache(); await loadSsot();
+
+  return { methods, provenanceFromSchema, activeProviders, providersForDigitalCred };
+}
+```
+
+Optional: `{ url: '...', fetchImpl: myFetch }` on each fetch for staging, tests, or older Node without global `fetch`. Call **`clearSsotCache()`** after tests or when you need to discard cached JSON.
 
 ## Provenance
 
@@ -340,22 +424,23 @@ Supported methods for Create AgeKey:
 
 Each age signal you create **must** include a provenance value; it is required by the authorization-detail schema and the SDK does not default it.
 
-Valid values are defined by the AgeKey authorization-detail schema. Use the exported constant for type-safe options (e.g. in dropdowns):
+Build allowlists using the SSOT section above: prefer **intersecting** schema enums with **provenance-config** active providers (and method compatibility) so the user can only pick combinations the API will accept.
 
 ```typescript
-import { AgeKey, AUTHORIZATION_PROVENANCE, type AuthorizationProvenance } from '@openage-agekey/sdk';
+import { AgeKey, fetchAuthorizationDetailSchema, provenancePathsFromAuthorizationDetailSchema } from '@openage-agekey/sdk';
 
-// AUTHORIZATION_PROVENANCE is the list of allowed values:
-// "/connect_id", "/stripe", "/inicis", "/singpass", "/privy", "/spruce_id",
-// "/verify_my", "/privately", "/veratad/internal", "/veratad/trinsic", "/veratad/cra", "/veratad/roc",
-// "/yoti", "/meta"
+const schema = await fetchAuthorizationDetailSchema();
+const allowedProvenance = provenancePathsFromAuthorizationDetailSchema(schema);
+if (allowedProvenance.length === 0) {
+  throw new Error('SSOT schema returned no provenance enum; check document shape or url');
+}
 
 const { authUrl } = await agekey.createAgeKey.initiate({
   method: 'digital_credential',
   age: { at_least_years: 18 },
   verifiedAt: new Date(),
   verificationId: 'txn_abc',
-  provenance: '/veratad/roc',   // required
+  provenance: '/veratad/roc',   // must satisfy live API + schema + provenance SSOT
 });
 ```
 
@@ -429,12 +514,17 @@ import type {
   UpgradeDirectResult,
   VerificationMethod,
   AgeSpec,
-  AuthorizationProvenance,
   MethodOverride,
   MethodOverridesMap,
   FacialAgeEstimationOverride,
+  ProvenanceConfigDocument,
+  AuthorizationDetailSchema,
 } from '@openage-agekey/sdk';
-import { AUTHORIZATION_PROVENANCE } from '@openage-agekey/sdk';  // list of valid provenance values
+import {
+  fetchProvenanceConfig,
+  fetchAuthorizationDetailSchema,
+  provenancePathsFromAuthorizationDetailSchema,
+} from '@openage-agekey/sdk';
 ```
 
 ## Documentation
