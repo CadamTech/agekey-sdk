@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/CadamTech/agekey-sdk/compare/v1.1.0...v1.2.0) (2026-04-21)
+
+
+### Features
+
+* SSOT-backed provenance and schema loaders ([#4](https://github.com/CadamTech/agekey-sdk/issues/4)) ([a33797c](https://github.com/CadamTech/agekey-sdk/commit/a33797c50526775adcec57ddf9bb96c127823a0c))
+
 # [1.1.0](https://github.com/CadamTech/agekey-sdk/compare/v1.0.3...v1.1.0) (2026-03-06)
 
 
