@@ -27,6 +27,7 @@ describe("Create AgeKey", () => {
           age: { date_of_birth: "2000-01-15" },
           verifiedAt: new Date(),
           verificationId: "txn_123",
+          provenance: "/connect_id",
         })
       ).rejects.toThrow(InvalidRequestError);
     });
@@ -50,6 +51,7 @@ describe("Create AgeKey", () => {
         age: { date_of_birth: "2000-01-15" },
         verifiedAt: new Date("2024-01-15T12:00:00Z"),
         verificationId: "txn_123",
+        provenance: "/connect_id",
       });
 
       expect(result.requestUri).toBe(
@@ -80,6 +82,7 @@ describe("Create AgeKey", () => {
       expect(authDetails[0].type).toBe("age_verification");
       expect(authDetails[0].method).toBe("id_doc_scan");
       expect(authDetails[0].age.date_of_birth).toBe("2000-01-15");
+      expect(authDetails[0].provenance).toBe("/connect_id");
     });
   });
 
@@ -154,6 +157,7 @@ describe("Create AgeKey", () => {
         age: { date_of_birth: "2000-01-15" },
         verifiedAt: new Date(),
         verificationId: "txn_123",
+        provenance: "/connect_id",
       });
 
       expect(result.requestUri).toBe(
