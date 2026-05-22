@@ -78,9 +78,9 @@ export class UseAgeKeyClient {
       claims: JSON.stringify(claims),
     });
 
-    // Add optional can_create flag
-    if (options.enableCreate) {
-      params.set("can_create", "true");
+    // Add optional can_create flag (explicitly emits both true and false)
+    if (typeof options.enableCreate === "boolean") {
+      params.set("can_create", String(options.enableCreate));
     }
 
     const url = `${this.environment.useEndpoint}?${params.toString()}`;

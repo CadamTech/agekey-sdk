@@ -100,6 +100,25 @@ describe("Use AgeKey", () => {
       expect(url).toContain("scope=openid&");
     });
 
+    it("sets can_create=false when enableCreate is false", () => {
+      const agekey = createClient();
+      const { url } = agekey.useAgeKey.getAuthorizationUrl({
+        ageThresholds: [18],
+        enableCreate: false,
+      });
+
+      expect(url).toContain("can_create=false");
+    });
+
+    it("omits can_create when enableCreate is not provided", () => {
+      const agekey = createClient();
+      const { url } = agekey.useAgeKey.getAuthorizationUrl({
+        ageThresholds: [18],
+      });
+
+      expect(url).not.toContain("can_create");
+    });
+
     it("includes overrides when specified", () => {
       const agekey = createClient();
       const { url } = agekey.useAgeKey.getAuthorizationUrl({
