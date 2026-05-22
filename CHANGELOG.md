@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/CadamTech/agekey-sdk/compare/v1.2.0...v1.3.0) (2026-05-22)
+
+
+### Features
+
+* emit can_create=false explicitly when enableCreate is false ([#6](https://github.com/CadamTech/agekey-sdk/issues/6)) ([5741981](https://github.com/CadamTech/agekey-sdk/commit/5741981ac5c5c211467ed392de80e8e27f481cd0))
+
 # [1.2.0](https://github.com/CadamTech/agekey-sdk/compare/v1.1.0...v1.2.0) (2026-04-21)
 
 
