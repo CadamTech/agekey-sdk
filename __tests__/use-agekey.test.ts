@@ -39,6 +39,25 @@ describe("Use AgeKey", () => {
       expect(claims.age_thresholds).toEqual([13, 18, 21]);
     });
 
+    it("requests response_mode=fragment", () => {
+      const agekey = createClient();
+      const { url } = agekey.useAgeKey.getAuthorizationUrl({
+        ageThresholds: [18],
+      });
+
+      expect(url).toContain("response_mode=fragment");
+    });
+
+    it("requests response_mode=fragment for the upgrade flow", () => {
+      const agekey = createClient();
+      const { url } = agekey.useAgeKey.getAuthorizationUrl({
+        ageThresholds: [18],
+        enableUpgrade: true,
+      });
+
+      expect(url).toContain("response_mode=fragment");
+    });
+
     it("generates unique state and nonce", () => {
       const agekey = createClient();
       const result1 = agekey.useAgeKey.getAuthorizationUrl({ ageThresholds: [18] });
@@ -174,6 +193,30 @@ describe("Use AgeKey", () => {
       expect(result.subject).toBe("user_123");
     });
 
+    it("extracts age thresholds from fragment-encoded callback", () => {
+      const agekey = createClient();
+      const state = "test_state_123";
+      const nonce = "test_nonce_456";
+
+      const idToken = createMockJwt({
+        sub: "user_123",
+        nonce,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        age_thresholds: { "13": true, "18": false },
+      });
+
+      const callbackUrl = `https://example.com/callback#id_token=${idToken}&state=${state}&code=abc123`;
+
+      const result = agekey.useAgeKey.handleCallback(callbackUrl, {
+        state,
+        nonce,
+      });
+
+      expect(result.ageThresholds).toEqual({ "13": true, "18": false });
+      expect(result.subject).toBe("user_123");
+      expect(result.code).toBe("abc123");
+    });
+
     it("throws StateMismatchError on state mismatch", () => {
       const agekey = createClient();
       const nonce = "test_nonce_456";
@@ -273,6 +316,18 @@ describe("Use AgeKey", () => {
       expect(result.state).toBe("xyz");
       expect(result.error).toBe("test");
       expect(result.errorDescription).toBe("desc");
+    });
+
+    it("parses fragment-encoded parameters", () => {
+      const agekey = createClient();
+      const callbackUrl =
+        "https://example.com/callback#id_token=abc&state=xyz&code=c1";
+
+      const result = agekey.useAgeKey.parseCallback(callbackUrl);
+
+      expect(result.idToken).toBe("abc");
+      expect(result.state).toBe("xyz");
+      expect(result.code).toBe("c1");
     });
   });
 });
