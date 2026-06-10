@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/CadamTech/agekey-sdk/compare/v1.3.0...v1.4.0) (2026-06-10)
+
+
+### Features
+
+* Use fragment mode in use agekey flow ([#7](https://github.com/CadamTech/agekey-sdk/issues/7)) ([404b5be](https://github.com/CadamTech/agekey-sdk/commit/404b5be9c8bba46875033871f7d235ea54c7b29d))
+
 # [1.3.0](https://github.com/CadamTech/agekey-sdk/compare/v1.2.0...v1.3.0) (2026-05-22)
 
 
