@@ -18,6 +18,25 @@ import type {
   Environment,
 } from "./types";
 
+// Reads callback params from the URL fragment, with a deprecated query-string
+// fallback. getAuthorizationUrl now requests response_mode=fragment, so the
+// fragment is authoritative and takes precedence.
+//
+// @deprecated The query-string fallback exists only to bridge the rollout window
+// where a client_id's server-side default still returns query. Once query is
+// retired server-side, drop the `url.search` read and parse the fragment only.
+function extractCallbackParams(callbackUrl: string): URLSearchParams {
+  const url = new URL(callbackUrl);
+  // DEPRECATED query fallback — remove once the server no longer returns query.
+  const params = new URLSearchParams(url.search);
+  if (url.hash.length > 1) {
+    new URLSearchParams(url.hash.slice(1)).forEach((value, key) => {
+      params.set(key, value);
+    });
+  }
+  return params;
+}
+
 export class UseAgeKeyClient {
   private readonly config: AgeKeyConfig;
   private readonly environment: Environment;
@@ -73,6 +92,9 @@ export class UseAgeKeyClient {
       redirect_uri: this.config.redirectUri,
       response_type: options.enableUpgrade ? RESPONSE_TYPES.upgrade : RESPONSE_TYPES.idToken,
       scope: options.enableUpgrade ? SCOPES.upgrade : SCOPES.openid,
+      // fragment is the OIDC default for id_token responses; request it explicitly
+      // so the response mode does not depend on per-client server defaults.
+      response_mode: "fragment",
       state,
       nonce,
       claims: JSON.stringify(claims),
@@ -92,9 +114,7 @@ export class UseAgeKeyClient {
     callbackUrl: string,
     validation: CallbackValidationParams
   ): UseAgeKeyResult {
-    // Parse callback URL
-    const url = new URL(callbackUrl);
-    const params = url.searchParams;
+    const params = extractCallbackParams(callbackUrl);
 
     const error = params.get("error");
     if (error) {
@@ -147,8 +167,7 @@ export class UseAgeKeyClient {
     error: string | null;
     errorDescription: string | null;
   } {
-    const url = new URL(callbackUrl);
-    const params = url.searchParams;
+    const params = extractCallbackParams(callbackUrl);
 
     return {
       idToken: params.get("id_token"),
