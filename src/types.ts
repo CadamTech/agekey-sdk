@@ -101,15 +101,12 @@ export interface UseAgeKeyOptions {
   };
 
   /**
-   * ISO 27566-1 certification filter. `required` accepts only ISO 27566-1
-   * certified age signals; `levelOfEffectiveness` additionally requires the
-   * signal to be certified at or above the given level. Per-method overrides
-   * (overrides.<method>.iso_27566_1) take precedence over these root values.
+   * ISO 27566-1 certification filter: the minimum required level of
+   * effectiveness. `"basic"` accepts any ISO 27566-1 certified age signal;
+   * higher values require certification at or above that level. Per-method
+   * overrides (overrides.<method>.iso_27566_1) take precedence over this root value.
    */
-  iso27566?: {
-    required?: boolean;
-    levelOfEffectiveness?: LevelOfEffectiveness;
-  };
+  iso27566?: LevelOfEffectiveness;
 
   /**
    * Enable upgrade flow: if user doesn't have an AgeKey, prompt to create one.
@@ -446,13 +443,10 @@ export interface UseAgeKeyClaims {
     denied?: string[];
   };
   /**
-   * ISO 27566-1 certification filter (wire shape). level_of_effectiveness, if
-   * present, is the ISO label (e.g. "Highly Effective").
+   * ISO 27566-1 certification filter (wire shape): the minimum required level
+   * of effectiveness as the ISO label (e.g. "Highly Effective").
    */
-  iso_27566_1?: {
-    required?: boolean;
-    level_of_effectiveness?: string;
-  };
+  iso_27566_1?: string;
 }
 
 /**
@@ -469,11 +463,8 @@ export interface MethodOverride {
   age_thresholds?: number[];
   /** Minimum verification date for this method */
   verified_after?: string;
-  /** ISO 27566-1 certification filter for this method (takes precedence over root) */
-  iso_27566_1?: {
-    required?: boolean;
-    level_of_effectiveness?: LevelOfEffectiveness;
-  };
+  /** Minimum ISO 27566-1 level of effectiveness for this method (takes precedence over root) */
+  iso_27566_1?: LevelOfEffectiveness;
   /** Method-specific attributes */
   attributes?: Record<string, unknown>;
 }
@@ -488,10 +479,7 @@ export type FacialAgeEstimationOverride =
 
 interface FacialOverrideBase {
   verified_after?: string;
-  iso_27566_1?: {
-    required?: boolean;
-    level_of_effectiveness?: LevelOfEffectiveness;
-  };
+  iso_27566_1?: LevelOfEffectiveness;
   attributes?: { on_device?: boolean };
 }
 
