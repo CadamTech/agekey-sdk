@@ -52,6 +52,12 @@ export interface AgeKeyConfig {
 // =============================================================================
 
 /**
+ * ISO 27566-1 levels of effectiveness, in ascending order (Basic < Effective
+ * < Highly Effective < Strict). Per request-claims.schema.json.
+ */
+export type LevelOfEffectiveness = "Basic" | "Effective" | "Highly Effective" | "Strict";
+
+/**
  * Options for building a Use AgeKey authorization URL.
  */
 export interface UseAgeKeyOptions {
@@ -89,6 +95,19 @@ export interface UseAgeKeyOptions {
     allowed?: string[];
     denied?: string[];
   };
+
+  /**
+   * Only accept age signals from ISO 27566-1 certified providers.
+   * Per-method overrides (overrides.<method>.iso_27566_1_required) take precedence.
+   */
+  iso27566Required?: boolean;
+
+  /**
+   * Only accept age signals certified at or above this ISO 27566-1 level of
+   * effectiveness. Per-method overrides (overrides.<method>.level_of_effectiveness)
+   * take precedence.
+   */
+  levelOfEffectiveness?: LevelOfEffectiveness;
 
   /**
    * Enable upgrade flow: if user doesn't have an AgeKey, prompt to create one.
@@ -420,6 +439,10 @@ export interface UseAgeKeyClaims {
     allowed?: string[];
     denied?: string[];
   };
+  /** Only accept ISO 27566-1 certified age signals */
+  iso_27566_1_required?: boolean;
+  /** Minimum ISO 27566-1 level of effectiveness */
+  level_of_effectiveness?: LevelOfEffectiveness;
 }
 
 /**
@@ -436,6 +459,10 @@ export interface MethodOverride {
   age_thresholds?: number[];
   /** Minimum verification date for this method */
   verified_after?: string;
+  /** Only accept ISO 27566-1 certified age signals for this method */
+  iso_27566_1_required?: boolean;
+  /** Minimum ISO 27566-1 level of effectiveness for this method */
+  level_of_effectiveness?: LevelOfEffectiveness;
   /** Method-specific attributes */
   attributes?: Record<string, unknown>;
 }
@@ -450,6 +477,8 @@ export type FacialAgeEstimationOverride =
 
 interface FacialOverrideBase {
   verified_after?: string;
+  iso_27566_1_required?: boolean;
+  level_of_effectiveness?: LevelOfEffectiveness;
   attributes?: { on_device?: boolean };
 }
 

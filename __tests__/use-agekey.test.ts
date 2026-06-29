@@ -155,6 +155,62 @@ describe("Use AgeKey", () => {
       expect(claims.overrides).toBeDefined();
       expect(claims.overrides.facial_age_estimation.min_age).toBe(21);
     });
+
+    it("includes iso_27566_1_required when requested", () => {
+      const agekey = createClient();
+      const { url } = agekey.useAgeKey.getAuthorizationUrl({
+        ageThresholds: [18],
+        iso27566Required: true,
+      });
+
+      const urlObj = new URL(url);
+      const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
+      expect(claims.iso_27566_1_required).toBe(true);
+    });
+
+    it("omits iso_27566_1_required when not requested", () => {
+      const agekey = createClient();
+      const { url } = agekey.useAgeKey.getAuthorizationUrl({ ageThresholds: [18] });
+
+      const urlObj = new URL(url);
+      const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
+      expect(claims.iso_27566_1_required).toBeUndefined();
+    });
+
+    it("includes level_of_effectiveness when specified", () => {
+      const agekey = createClient();
+      const { url } = agekey.useAgeKey.getAuthorizationUrl({
+        ageThresholds: [18],
+        levelOfEffectiveness: "Highly Effective",
+      });
+
+      const urlObj = new URL(url);
+      const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
+      expect(claims.level_of_effectiveness).toBe("Highly Effective");
+    });
+
+    it("passes through per-method iso_27566_1_required and level_of_effectiveness overrides", () => {
+      const agekey = createClient();
+      const { url } = agekey.useAgeKey.getAuthorizationUrl({
+        ageThresholds: [18],
+        iso27566Required: true,
+        levelOfEffectiveness: "Effective",
+        overrides: {
+          facial_age_estimation: {
+            min_age: 21,
+            iso_27566_1_required: true,
+            level_of_effectiveness: "Strict",
+          },
+        },
+      });
+
+      const urlObj = new URL(url);
+      const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
+      expect(claims.iso_27566_1_required).toBe(true);
+      expect(claims.level_of_effectiveness).toBe("Effective");
+      expect(claims.overrides.facial_age_estimation.iso_27566_1_required).toBe(true);
+      expect(claims.overrides.facial_age_estimation.level_of_effectiveness).toBe("Strict");
+    });
   });
 
   describe("handleCallback", () => {

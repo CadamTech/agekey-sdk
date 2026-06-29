@@ -40,6 +40,7 @@ export type {
   MethodOverride,
   FacialAgeEstimationOverride,
   MethodOverridesMap,
+  LevelOfEffectiveness,
   // Errors
   AgeKeyErrorCode,
   // Internal (for advanced use)

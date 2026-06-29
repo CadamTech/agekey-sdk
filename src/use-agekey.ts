@@ -86,6 +86,15 @@ export class UseAgeKeyClient {
       claims.provenance = options.provenance;
     }
 
+    // ISO 27566-1 certification filters (root level; per-method overrides go
+    // through `overrides` above and take precedence server-side).
+    if (options.iso27566Required) {
+      claims.iso_27566_1_required = true;
+    }
+    if (options.levelOfEffectiveness) {
+      claims.level_of_effectiveness = options.levelOfEffectiveness;
+    }
+
     // Build URL parameters
     const params = new URLSearchParams({
       client_id: this.config.clientId,
