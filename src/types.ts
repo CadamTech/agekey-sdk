@@ -444,9 +444,9 @@ export interface UseAgeKeyClaims {
   };
   /**
    * ISO 27566-1 certification filter (wire shape): the minimum required level
-   * of effectiveness as the ISO label (e.g. "Highly Effective").
+   * of effectiveness (snake_case, sent verbatim).
    */
-  iso_27566_1?: string;
+  iso_27566_1?: LevelOfEffectiveness;
 }
 
 /**

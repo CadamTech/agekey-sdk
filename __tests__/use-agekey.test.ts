@@ -156,7 +156,7 @@ describe("Use AgeKey", () => {
       expect(claims.overrides.facial_age_estimation.min_age).toBe(21);
     });
 
-    it("maps snake_case iso27566 to the ISO wire label", () => {
+    it("sends iso27566 as the snake_case level verbatim", () => {
       const agekey = createClient();
       const { url } = agekey.useAgeKey.getAuthorizationUrl({
         ageThresholds: [18],
@@ -165,10 +165,10 @@ describe("Use AgeKey", () => {
 
       const urlObj = new URL(url);
       const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
-      expect(claims.iso_27566_1).toBe("Highly Effective");
+      expect(claims.iso_27566_1).toBe("highly_effective");
     });
 
-    it("maps iso27566 'basic' (require certification) to the wire label", () => {
+    it("sends iso27566 'basic' (require certification)", () => {
       const agekey = createClient();
       const { url } = agekey.useAgeKey.getAuthorizationUrl({
         ageThresholds: [18],
@@ -177,7 +177,7 @@ describe("Use AgeKey", () => {
 
       const urlObj = new URL(url);
       const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
-      expect(claims.iso_27566_1).toBe("Basic");
+      expect(claims.iso_27566_1).toBe("basic");
     });
 
     it("omits iso_27566_1 when not requested", () => {
@@ -189,7 +189,7 @@ describe("Use AgeKey", () => {
       expect(claims.iso_27566_1).toBeUndefined();
     });
 
-    it("maps the per-method iso_27566_1 override to the wire label", () => {
+    it("passes the per-method iso_27566_1 override through verbatim", () => {
       const agekey = createClient();
       const { url } = agekey.useAgeKey.getAuthorizationUrl({
         ageThresholds: [18],
@@ -204,8 +204,8 @@ describe("Use AgeKey", () => {
 
       const urlObj = new URL(url);
       const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
-      expect(claims.iso_27566_1).toBe("Effective");
-      expect(claims.overrides.facial_age_estimation.iso_27566_1).toBe("Strict");
+      expect(claims.iso_27566_1).toBe("effective");
+      expect(claims.overrides.facial_age_estimation.iso_27566_1).toBe("strict");
     });
   });
 

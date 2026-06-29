@@ -14,18 +14,8 @@ import type {
   CallbackValidationParams,
   UseAgeKeyResult,
   UseAgeKeyClaims,
-  LevelOfEffectiveness,
   Environment,
 } from "./types";
-
-// Map the SDK's snake_case level-of-effectiveness identifiers to the ISO labels
-// the API expects on the wire (per request-claims.schema.json).
-const LEVEL_OF_EFFECTIVENESS_WIRE: Record<LevelOfEffectiveness, string> = {
-  basic: "Basic",
-  effective: "Effective",
-  highly_effective: "Highly Effective",
-  strict: "Strict",
-};
 
 
 // Reads callback params from the URL fragment, with a deprecated query-string
@@ -89,18 +79,9 @@ export class UseAgeKeyClient {
           );
         }
       }
-      // Map each override's snake_case iso_27566_1 level to the ISO wire label;
-      // all other fields pass through unchanged.
-      claims.overrides = Object.fromEntries(
-        Object.entries(options.overrides).map(([method, override]) => {
-          const o = { ...(override as Record<string, unknown>) };
-          const level = o["iso_27566_1"];
-          if (typeof level === "string") {
-            o["iso_27566_1"] = LEVEL_OF_EFFECTIVENESS_WIRE[level as LevelOfEffectiveness];
-          }
-          return [method, o];
-        })
-      );
+      // Overrides (including per-method iso_27566_1, a snake_case level) pass
+      // through to the wire claims unchanged.
+      claims.overrides = options.overrides as Record<string, Record<string, unknown>>;
     }
 
     if (options.provenance && (options.provenance.allowed?.length || options.provenance.denied?.length)) {
@@ -110,7 +91,7 @@ export class UseAgeKeyClient {
     // ISO 27566-1 certification filter (root level; per-method overrides go
     // through `overrides` above and take precedence server-side).
     if (options.iso27566) {
-      claims.iso_27566_1 = LEVEL_OF_EFFECTIVENESS_WIRE[options.iso27566];
+      claims.iso_27566_1 = options.iso27566;
     }
 
     // Build URL parameters
