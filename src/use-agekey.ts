@@ -14,9 +14,18 @@ import type {
   CallbackValidationParams,
   UseAgeKeyResult,
   UseAgeKeyClaims,
-  MethodOverride,
+  LevelOfEffectiveness,
   Environment,
 } from "./types";
+
+// Map the SDK's snake_case level-of-effectiveness identifiers to the ISO labels
+// the API expects on the wire (per request-claims.schema.json).
+const LEVEL_OF_EFFECTIVENESS_WIRE: Record<LevelOfEffectiveness, string> = {
+  basic: "Basic",
+  effective: "Effective",
+  highly_effective: "Highly Effective",
+  strict: "Strict",
+};
 
 // Reads callback params from the URL fragment, with a deprecated query-string
 // fallback. getAuthorizationUrl now requests response_mode=fragment, so the
@@ -79,7 +88,18 @@ export class UseAgeKeyClient {
           );
         }
       }
-      claims.overrides = options.overrides as Record<string, MethodOverride>;
+      // Map each override's snake_case level_of_effectiveness to the ISO wire
+      // label; all other fields pass through unchanged.
+      claims.overrides = Object.fromEntries(
+        Object.entries(options.overrides).map(([method, override]) => {
+          const o = { ...(override as Record<string, unknown>) };
+          const level = o["level_of_effectiveness"];
+          if (typeof level === "string") {
+            o["level_of_effectiveness"] = LEVEL_OF_EFFECTIVENESS_WIRE[level as LevelOfEffectiveness];
+          }
+          return [method, o];
+        })
+      );
     }
 
     if (options.provenance && (options.provenance.allowed?.length || options.provenance.denied?.length)) {
@@ -92,7 +112,7 @@ export class UseAgeKeyClient {
       claims.iso_27566_1_required = true;
     }
     if (options.levelOfEffectiveness) {
-      claims.level_of_effectiveness = options.levelOfEffectiveness;
+      claims.level_of_effectiveness = LEVEL_OF_EFFECTIVENESS_WIRE[options.levelOfEffectiveness];
     }
 
     // Build URL parameters

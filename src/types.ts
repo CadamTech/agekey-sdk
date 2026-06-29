@@ -52,10 +52,14 @@ export interface AgeKeyConfig {
 // =============================================================================
 
 /**
- * ISO 27566-1 levels of effectiveness, in ascending order (Basic < Effective
- * < Highly Effective < Strict). Per request-claims.schema.json.
+ * ISO 27566-1 levels of effectiveness, in ascending order
+ * (basic < effective < highly_effective < strict).
+ *
+ * These are the SDK's idiomatic identifiers. The SDK maps them to the ISO
+ * labels the API expects on the wire ("Basic", "Effective", "Highly Effective",
+ * "Strict") when building claims — callers never deal with the spaced labels.
  */
-export type LevelOfEffectiveness = "Basic" | "Effective" | "Highly Effective" | "Strict";
+export type LevelOfEffectiveness = "basic" | "effective" | "highly_effective" | "strict";
 
 /**
  * Options for building a Use AgeKey authorization URL.
@@ -432,8 +436,12 @@ export interface UseAgeKeyClaims {
   allowed_methods?: VerificationMethod[];
   /** Optional minimum verification date */
   verified_after?: string;
-  /** Optional method-specific overrides (may include age_thresholds per method) */
-  overrides?: Record<string, MethodOverride | FacialAgeEstimationOverride>;
+  /**
+   * Optional method-specific overrides (wire shape). level_of_effectiveness, if
+   * present, is the ISO label ("Highly Effective"), already mapped from the
+   * SDK's snake_case input.
+   */
+  overrides?: Record<string, Record<string, unknown>>;
   /** Optional provenance filter */
   provenance?: {
     allowed?: string[];
@@ -441,8 +449,8 @@ export interface UseAgeKeyClaims {
   };
   /** Only accept ISO 27566-1 certified age signals */
   iso_27566_1_required?: boolean;
-  /** Minimum ISO 27566-1 level of effectiveness */
-  level_of_effectiveness?: LevelOfEffectiveness;
+  /** Minimum ISO 27566-1 level of effectiveness (ISO label, e.g. "Highly Effective") */
+  level_of_effectiveness?: string;
 }
 
 /**

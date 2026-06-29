@@ -177,11 +177,11 @@ describe("Use AgeKey", () => {
       expect(claims.iso_27566_1_required).toBeUndefined();
     });
 
-    it("includes level_of_effectiveness when specified", () => {
+    it("maps snake_case level_of_effectiveness to the ISO wire label", () => {
       const agekey = createClient();
       const { url } = agekey.useAgeKey.getAuthorizationUrl({
         ageThresholds: [18],
-        levelOfEffectiveness: "Highly Effective",
+        levelOfEffectiveness: "highly_effective",
       });
 
       const urlObj = new URL(url);
@@ -189,17 +189,17 @@ describe("Use AgeKey", () => {
       expect(claims.level_of_effectiveness).toBe("Highly Effective");
     });
 
-    it("passes through per-method iso_27566_1_required and level_of_effectiveness overrides", () => {
+    it("maps per-method iso_27566_1_required and level_of_effectiveness overrides to wire labels", () => {
       const agekey = createClient();
       const { url } = agekey.useAgeKey.getAuthorizationUrl({
         ageThresholds: [18],
         iso27566Required: true,
-        levelOfEffectiveness: "Effective",
+        levelOfEffectiveness: "effective",
         overrides: {
           facial_age_estimation: {
             min_age: 21,
             iso_27566_1_required: true,
-            level_of_effectiveness: "Strict",
+            level_of_effectiveness: "strict",
           },
         },
       });
