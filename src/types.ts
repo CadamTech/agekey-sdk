@@ -101,17 +101,15 @@ export interface UseAgeKeyOptions {
   };
 
   /**
-   * Only accept age signals from ISO 27566-1 certified providers.
-   * Per-method overrides (overrides.<method>.iso_27566_1_required) take precedence.
+   * ISO 27566-1 certification filter. `required` accepts only ISO 27566-1
+   * certified age signals; `levelOfEffectiveness` additionally requires the
+   * signal to be certified at or above the given level. Per-method overrides
+   * (overrides.<method>.iso_27566_1) take precedence over these root values.
    */
-  iso27566Required?: boolean;
-
-  /**
-   * Only accept age signals certified at or above this ISO 27566-1 level of
-   * effectiveness. Per-method overrides (overrides.<method>.level_of_effectiveness)
-   * take precedence.
-   */
-  levelOfEffectiveness?: LevelOfEffectiveness;
+  iso27566?: {
+    required?: boolean;
+    levelOfEffectiveness?: LevelOfEffectiveness;
+  };
 
   /**
    * Enable upgrade flow: if user doesn't have an AgeKey, prompt to create one.
@@ -437,9 +435,9 @@ export interface UseAgeKeyClaims {
   /** Optional minimum verification date */
   verified_after?: string;
   /**
-   * Optional method-specific overrides (wire shape). level_of_effectiveness, if
-   * present, is the ISO label ("Highly Effective"), already mapped from the
-   * SDK's snake_case input.
+   * Optional method-specific overrides (wire shape). A nested iso_27566_1, if
+   * present, carries its level_of_effectiveness as the ISO label
+   * ("Highly Effective"), already mapped from the SDK's snake_case input.
    */
   overrides?: Record<string, Record<string, unknown>>;
   /** Optional provenance filter */
@@ -447,10 +445,14 @@ export interface UseAgeKeyClaims {
     allowed?: string[];
     denied?: string[];
   };
-  /** Only accept ISO 27566-1 certified age signals */
-  iso_27566_1_required?: boolean;
-  /** Minimum ISO 27566-1 level of effectiveness (ISO label, e.g. "Highly Effective") */
-  level_of_effectiveness?: string;
+  /**
+   * ISO 27566-1 certification filter (wire shape). level_of_effectiveness, if
+   * present, is the ISO label (e.g. "Highly Effective").
+   */
+  iso_27566_1?: {
+    required?: boolean;
+    level_of_effectiveness?: string;
+  };
 }
 
 /**
@@ -467,10 +469,11 @@ export interface MethodOverride {
   age_thresholds?: number[];
   /** Minimum verification date for this method */
   verified_after?: string;
-  /** Only accept ISO 27566-1 certified age signals for this method */
-  iso_27566_1_required?: boolean;
-  /** Minimum ISO 27566-1 level of effectiveness for this method */
-  level_of_effectiveness?: LevelOfEffectiveness;
+  /** ISO 27566-1 certification filter for this method (takes precedence over root) */
+  iso_27566_1?: {
+    required?: boolean;
+    level_of_effectiveness?: LevelOfEffectiveness;
+  };
   /** Method-specific attributes */
   attributes?: Record<string, unknown>;
 }
@@ -485,8 +488,10 @@ export type FacialAgeEstimationOverride =
 
 interface FacialOverrideBase {
   verified_after?: string;
-  iso_27566_1_required?: boolean;
-  level_of_effectiveness?: LevelOfEffectiveness;
+  iso_27566_1?: {
+    required?: boolean;
+    level_of_effectiveness?: LevelOfEffectiveness;
+  };
   attributes?: { on_device?: boolean };
 }
 

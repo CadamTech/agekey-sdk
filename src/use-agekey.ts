@@ -27,6 +27,17 @@ const LEVEL_OF_EFFECTIVENESS_WIRE: Record<LevelOfEffectiveness, string> = {
   strict: "Strict",
 };
 
+// Map an iso_27566_1 filter object's level_of_effectiveness to the ISO wire
+// label, leaving `required` (and anything else) untouched.
+function mapIsoToWire(iso: Record<string, unknown>): Record<string, unknown> {
+  const mapped = { ...iso };
+  const level = mapped["level_of_effectiveness"];
+  if (typeof level === "string") {
+    mapped["level_of_effectiveness"] = LEVEL_OF_EFFECTIVENESS_WIRE[level as LevelOfEffectiveness];
+  }
+  return mapped;
+}
+
 // Reads callback params from the URL fragment, with a deprecated query-string
 // fallback. getAuthorizationUrl now requests response_mode=fragment, so the
 // fragment is authoritative and takes precedence.
@@ -88,14 +99,14 @@ export class UseAgeKeyClient {
           );
         }
       }
-      // Map each override's snake_case level_of_effectiveness to the ISO wire
-      // label; all other fields pass through unchanged.
+      // Map each override's nested iso_27566_1.level_of_effectiveness to the ISO
+      // wire label; all other fields pass through unchanged.
       claims.overrides = Object.fromEntries(
         Object.entries(options.overrides).map(([method, override]) => {
           const o = { ...(override as Record<string, unknown>) };
-          const level = o["level_of_effectiveness"];
-          if (typeof level === "string") {
-            o["level_of_effectiveness"] = LEVEL_OF_EFFECTIVENESS_WIRE[level as LevelOfEffectiveness];
+          const iso = o["iso_27566_1"];
+          if (iso && typeof iso === "object") {
+            o["iso_27566_1"] = mapIsoToWire(iso as Record<string, unknown>);
           }
           return [method, o];
         })
@@ -106,13 +117,17 @@ export class UseAgeKeyClient {
       claims.provenance = options.provenance;
     }
 
-    // ISO 27566-1 certification filters (root level; per-method overrides go
+    // ISO 27566-1 certification filter (root level; per-method overrides go
     // through `overrides` above and take precedence server-side).
-    if (options.iso27566Required) {
-      claims.iso_27566_1_required = true;
-    }
-    if (options.levelOfEffectiveness) {
-      claims.level_of_effectiveness = LEVEL_OF_EFFECTIVENESS_WIRE[options.levelOfEffectiveness];
+    if (options.iso27566 && (options.iso27566.required || options.iso27566.levelOfEffectiveness)) {
+      claims.iso_27566_1 = {};
+      if (options.iso27566.required) {
+        claims.iso_27566_1.required = true;
+      }
+      if (options.iso27566.levelOfEffectiveness) {
+        claims.iso_27566_1.level_of_effectiveness =
+          LEVEL_OF_EFFECTIVENESS_WIRE[options.iso27566.levelOfEffectiveness];
+      }
     }
 
     // Build URL parameters

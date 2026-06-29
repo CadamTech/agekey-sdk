@@ -156,60 +156,59 @@ describe("Use AgeKey", () => {
       expect(claims.overrides.facial_age_estimation.min_age).toBe(21);
     });
 
-    it("includes iso_27566_1_required when requested", () => {
+    it("nests iso_27566_1.required when requested", () => {
       const agekey = createClient();
       const { url } = agekey.useAgeKey.getAuthorizationUrl({
         ageThresholds: [18],
-        iso27566Required: true,
+        iso27566: { required: true },
       });
 
       const urlObj = new URL(url);
       const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
-      expect(claims.iso_27566_1_required).toBe(true);
+      expect(claims.iso_27566_1).toEqual({ required: true });
     });
 
-    it("omits iso_27566_1_required when not requested", () => {
+    it("omits iso_27566_1 when not requested", () => {
       const agekey = createClient();
       const { url } = agekey.useAgeKey.getAuthorizationUrl({ ageThresholds: [18] });
 
       const urlObj = new URL(url);
       const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
-      expect(claims.iso_27566_1_required).toBeUndefined();
+      expect(claims.iso_27566_1).toBeUndefined();
     });
 
-    it("maps snake_case level_of_effectiveness to the ISO wire label", () => {
+    it("maps snake_case levelOfEffectiveness to the ISO wire label inside iso_27566_1", () => {
       const agekey = createClient();
       const { url } = agekey.useAgeKey.getAuthorizationUrl({
         ageThresholds: [18],
-        levelOfEffectiveness: "highly_effective",
+        iso27566: { levelOfEffectiveness: "highly_effective" },
       });
 
       const urlObj = new URL(url);
       const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
-      expect(claims.level_of_effectiveness).toBe("Highly Effective");
+      expect(claims.iso_27566_1).toEqual({ level_of_effectiveness: "Highly Effective" });
     });
 
-    it("maps per-method iso_27566_1_required and level_of_effectiveness overrides to wire labels", () => {
+    it("maps the per-method iso_27566_1 override to wire labels", () => {
       const agekey = createClient();
       const { url } = agekey.useAgeKey.getAuthorizationUrl({
         ageThresholds: [18],
-        iso27566Required: true,
-        levelOfEffectiveness: "effective",
+        iso27566: { required: true, levelOfEffectiveness: "effective" },
         overrides: {
           facial_age_estimation: {
             min_age: 21,
-            iso_27566_1_required: true,
-            level_of_effectiveness: "strict",
+            iso_27566_1: { required: true, level_of_effectiveness: "strict" },
           },
         },
       });
 
       const urlObj = new URL(url);
       const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
-      expect(claims.iso_27566_1_required).toBe(true);
-      expect(claims.level_of_effectiveness).toBe("Effective");
-      expect(claims.overrides.facial_age_estimation.iso_27566_1_required).toBe(true);
-      expect(claims.overrides.facial_age_estimation.level_of_effectiveness).toBe("Strict");
+      expect(claims.iso_27566_1).toEqual({ required: true, level_of_effectiveness: "Effective" });
+      expect(claims.overrides.facial_age_estimation.iso_27566_1).toEqual({
+        required: true,
+        level_of_effectiveness: "Strict",
+      });
     });
   });
 

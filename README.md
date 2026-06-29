@@ -195,8 +195,10 @@ const { url, state, nonce } = agekey.useAgeKey.getAuthorizationUrl({
     allowed?: string[],
     denied?: string[],
   },
-  iso27566Required?: boolean,            // Optional: only accept ISO 27566-1 certified signals
-  levelOfEffectiveness?: "basic" | "effective" | "highly_effective" | "strict", // Optional: minimum ISO 27566-1 level
+  iso27566?: {                    // Optional: ISO 27566-1 certification filter
+    required?: boolean,                  //   only accept ISO 27566-1 certified signals
+    levelOfEffectiveness?: "basic" | "effective" | "highly_effective" | "strict", // minimum level
+  },
   enableCreate?: boolean,         // Optional: Show "create AgeKey" button if user has none
   enableUpgrade?: boolean,        // Optional: Allow upgrading an existing AgeKey
 });
@@ -204,7 +206,7 @@ const { url, state, nonce } = agekey.useAgeKey.getAuthorizationUrl({
 
 All method overrides accept an optional `age_thresholds` array that maps 1:1 to the root `ageThresholds` (by index). When using `overrides.facial_age_estimation`, **either `min_age` or `age_thresholds` is required** (per request-claims schema `oneOf`). The `FacialAgeEstimationOverride` type enforces this at compile time, and the SDK validates it at runtime.
 
-`iso27566Required` and `levelOfEffectiveness` filter to ISO 27566-1 certified age signals (the level is ordered `basic` < `effective` < `highly_effective` < `strict`). Both can also be set per method via `overrides.<method>.iso_27566_1_required` / `overrides.<method>.level_of_effectiveness`, which take precedence over the root values. The SDK maps the snake_case level identifiers to the ISO labels the API expects on the wire (`"Highly Effective"`, etc.) — you only ever pass the snake_case form.
+`iso27566` filters to ISO 27566-1 certified age signals: `required` accepts only certified signals, and `levelOfEffectiveness` additionally requires certification at or above the given level (ordered `basic` < `effective` < `highly_effective` < `strict`). It can also be set per method via `overrides.<method>.iso_27566_1` (`{ required, level_of_effectiveness }`), which takes precedence over the root value. The SDK maps the snake_case level identifiers to the ISO labels the API expects on the wire (`"Highly Effective"`, etc.) — you only ever pass the snake_case form.
 
 #### `handleCallback(callbackUrl, validation)`
 
