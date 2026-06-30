@@ -195,12 +195,15 @@ const { url, state, nonce } = agekey.useAgeKey.getAuthorizationUrl({
     allowed?: string[],
     denied?: string[],
   },
+  iso27566?: "basic" | "effective" | "highly_effective" | "strict", // Optional: min ISO 27566-1 level ("basic" = any certified)
   enableCreate?: boolean,         // Optional: Show "create AgeKey" button if user has none
   enableUpgrade?: boolean,        // Optional: Allow upgrading an existing AgeKey
 });
 ```
 
 All method overrides accept an optional `age_thresholds` array that maps 1:1 to the root `ageThresholds` (by index). When using `overrides.facial_age_estimation`, **either `min_age` or `age_thresholds` is required** (per request-claims schema `oneOf`). The `FacialAgeEstimationOverride` type enforces this at compile time, and the SDK validates it at runtime.
+
+`iso27566` is the minimum required ISO 27566-1 level of effectiveness (ordered `basic` < `effective` < `highly_effective` < `strict`); `"basic"` accepts any certified signal, higher values raise the bar. It can also be set per method via `overrides.<method>.iso_27566_1`, which takes precedence over the root value. The level is sent to the API verbatim as snake_case.
 
 #### `handleCallback(callbackUrl, validation)`
 

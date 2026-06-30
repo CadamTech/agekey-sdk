@@ -155,6 +155,58 @@ describe("Use AgeKey", () => {
       expect(claims.overrides).toBeDefined();
       expect(claims.overrides.facial_age_estimation.min_age).toBe(21);
     });
+
+    it("sends iso27566 as the snake_case level verbatim", () => {
+      const agekey = createClient();
+      const { url } = agekey.useAgeKey.getAuthorizationUrl({
+        ageThresholds: [18],
+        iso27566: "highly_effective",
+      });
+
+      const urlObj = new URL(url);
+      const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
+      expect(claims.iso_27566_1).toBe("highly_effective");
+    });
+
+    it("sends iso27566 'basic' (require certification)", () => {
+      const agekey = createClient();
+      const { url } = agekey.useAgeKey.getAuthorizationUrl({
+        ageThresholds: [18],
+        iso27566: "basic",
+      });
+
+      const urlObj = new URL(url);
+      const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
+      expect(claims.iso_27566_1).toBe("basic");
+    });
+
+    it("omits iso_27566_1 when not requested", () => {
+      const agekey = createClient();
+      const { url } = agekey.useAgeKey.getAuthorizationUrl({ ageThresholds: [18] });
+
+      const urlObj = new URL(url);
+      const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
+      expect(claims.iso_27566_1).toBeUndefined();
+    });
+
+    it("passes the per-method iso_27566_1 override through verbatim", () => {
+      const agekey = createClient();
+      const { url } = agekey.useAgeKey.getAuthorizationUrl({
+        ageThresholds: [18],
+        iso27566: "effective",
+        overrides: {
+          facial_age_estimation: {
+            min_age: 21,
+            iso_27566_1: "strict",
+          },
+        },
+      });
+
+      const urlObj = new URL(url);
+      const claims = JSON.parse(urlObj.searchParams.get("claims") || "{}");
+      expect(claims.iso_27566_1).toBe("effective");
+      expect(claims.overrides.facial_age_estimation.iso_27566_1).toBe("strict");
+    });
   });
 
   describe("handleCallback", () => {

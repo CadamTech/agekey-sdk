@@ -14,7 +14,6 @@ import type {
   CallbackValidationParams,
   UseAgeKeyResult,
   UseAgeKeyClaims,
-  MethodOverride,
   Environment,
 } from "./types";
 
@@ -79,11 +78,19 @@ export class UseAgeKeyClient {
           );
         }
       }
-      claims.overrides = options.overrides as Record<string, MethodOverride>;
+      // Overrides (including per-method iso_27566_1, a snake_case level) pass
+      // through to the wire claims unchanged.
+      claims.overrides = options.overrides;
     }
 
     if (options.provenance && (options.provenance.allowed?.length || options.provenance.denied?.length)) {
       claims.provenance = options.provenance;
+    }
+
+    // ISO 27566-1 certification filter (root level; per-method overrides go
+    // through `overrides` above and take precedence server-side).
+    if (options.iso27566) {
+      claims.iso_27566_1 = options.iso27566;
     }
 
     // Build URL parameters
