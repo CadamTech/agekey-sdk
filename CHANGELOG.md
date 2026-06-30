@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/CadamTech/agekey-sdk/compare/v1.4.0...v1.5.0) (2026-06-30)
+
+
+### Features
+
+* support ISO 27566-1 and level-of-effectiveness filtering ([#8](https://github.com/CadamTech/agekey-sdk/issues/8)) ([0b1946d](https://github.com/CadamTech/agekey-sdk/commit/0b1946daba0734b61437ca22f565da2c3b941ba6))
+
 # [1.5.0](https://github.com/CadamTech/agekey-sdk/compare/v1.4.0...v1.5.0) (2026-06-29)
 
 
