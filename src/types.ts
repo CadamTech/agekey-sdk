@@ -55,9 +55,8 @@ export interface AgeKeyConfig {
  * ISO 27566-1 levels of effectiveness, in ascending order
  * (basic < effective < highly_effective < strict).
  *
- * These are the SDK's idiomatic identifiers. The SDK maps them to the ISO
- * labels the API expects on the wire ("Basic", "Effective", "Highly Effective",
- * "Strict") when building claims — callers never deal with the spaced labels.
+ * Idiomatic snake_case identifiers, sent to the API verbatim — there is no
+ * client-side mapping.
  */
 export type LevelOfEffectiveness = "basic" | "effective" | "highly_effective" | "strict";
 
@@ -432,11 +431,11 @@ export interface UseAgeKeyClaims {
   /** Optional minimum verification date */
   verified_after?: string;
   /**
-   * Optional method-specific overrides (wire shape). A nested iso_27566_1, if
-   * present, carries its level_of_effectiveness as the ISO label
-   * ("Highly Effective"), already mapped from the SDK's snake_case input.
+   * Optional method-specific overrides (wire shape). Identical to the SDK input
+   * shape; passed through unchanged, including any per-method iso_27566_1
+   * (snake_case level, sent verbatim).
    */
-  overrides?: Record<string, Record<string, unknown>>;
+  overrides?: MethodOverridesMap;
   /** Optional provenance filter */
   provenance?: {
     allowed?: string[];

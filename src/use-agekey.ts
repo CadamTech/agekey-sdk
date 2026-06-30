@@ -17,7 +17,6 @@ import type {
   Environment,
 } from "./types";
 
-
 // Reads callback params from the URL fragment, with a deprecated query-string
 // fallback. getAuthorizationUrl now requests response_mode=fragment, so the
 // fragment is authoritative and takes precedence.
@@ -81,7 +80,7 @@ export class UseAgeKeyClient {
       }
       // Overrides (including per-method iso_27566_1, a snake_case level) pass
       // through to the wire claims unchanged.
-      claims.overrides = options.overrides as Record<string, Record<string, unknown>>;
+      claims.overrides = options.overrides;
     }
 
     if (options.provenance && (options.provenance.allowed?.length || options.provenance.denied?.length)) {
